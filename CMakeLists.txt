@@ -85,7 +85,31 @@ FetchContent_Declare(RapidJSON
     GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
     GIT_TAG v1.1.0
 )
+option(RAPIDJSON_BUILD_DOC "" OFF)
+option(RAPIDJSON_BUILD_EXAMPLES "" OFF)
+option(RAPIDJSON_BUILD_TESTS "" OFF)
 FetchContent_MakeAvailable(RapidJSON)
+
+FetchContent_Declare (
+    tracy
+    GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+    GIT_TAG master
+    GIT_SHALLOW TRUE
+    GIT_PROGRESS TRUE
+)
+# available options : TRACY_ENABLE , TRACY_ON_DEMAND , TRACY_NO_BROADCAST , TRACY_NO_CODE_TRANSFER , ...
+option(TRACY_ENABLE "" ON)
+option(TRACY_ON_DEMAND "" ON)
+FetchContent_MakeAvailable(tracy)
+
+FetchContent_Declare(
+  Boost
+  GIT_REPOSITORY https://github.com/boostorg/boost.git
+  GIT_TAG boost-1.88.0
+  GIT_SHALLOW TRUE
+  GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable(Boost)
 
 
 file(GLOB src
@@ -95,6 +119,7 @@ file(GLOB src
 
 add_executable (game_engine ${glew_src} ${lua_src} ${src})
 add_dependencies(game_engine lua)
+add_dependencies(game_engine glew)
 
 target_include_directories(game_engine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua/src/lua/src")
 target_include_directories(game_engine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/_deps/rapidjson-src/include")
@@ -110,3 +135,5 @@ target_link_libraries(game_engine PRIVATE LuaBridge)
 target_link_libraries(game_engine PRIVATE glm::glm)
 target_link_libraries(game_engine PRIVATE Freetype::Freetype)
 target_link_libraries(game_engine PRIVATE ${OPENGL_LIBRARY}) # filled by "find_package(OpenGL REQUIRED)" 
+target_link_libraries(game_engine PRIVATE Tracy::TracyClient) 
+target_link_libraries(game_engine PRIVATE Boost::asio)

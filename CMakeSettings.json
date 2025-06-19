@@ -2,14 +2,31 @@
   "configurations": [
     {
       "name": "x64-Debug",
-      "generator": "Ninja",
+      "generator": "Visual Studio 17 2022",
       "configurationType": "Debug",
-      "inheritEnvironments": [ "msvc_x64_x64" ],
-      "buildRoot": "${projectDir}\\windows_build\\${name}",
+      "inheritEnvironments": [ "msvc_x86" ],
+      "buildRoot": "${projectDir}\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": ""
+    },
+    {
+      "name": "arm64-Release",
+      "generator": "Visual Studio 17 2022 Win64",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "CMAKE_CXX_FLAGS",
+          "value": "-DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN"
+        }
+      ]
     }
   ]
 }
