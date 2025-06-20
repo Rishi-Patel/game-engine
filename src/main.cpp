@@ -1,10 +1,12 @@
 #include <algorithm>
 #include <array>
+#include <boost/asio.hpp>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <optional>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include "AudioManager.h"
@@ -12,11 +14,21 @@
 #include "InputManager.h"
 #include "ResourceManager.h"
 #include "SceneManager.h"
+#include "Server.h"
 
 constexpr auto BACKGROUND_SFX_CHANNEL = 0;
 constexpr auto SCORE_SFX_CHANNEL = 1;
 
 SceneManager* scene;
+
+void RunServer(boost::asio::io_context& io_context) {
+  try {
+    udp_server server(io_context);
+    io_context.run();
+  } catch (std::exception& e) {
+    std::cerr << e.what() << std::endl;
+  }
+}
 
 int main(int argc, char* argv[]) {
   bool running = true;
@@ -26,6 +38,10 @@ int main(int argc, char* argv[]) {
   std::unique_ptr<AudioManager> audioManager(nullptr);
   std::unique_ptr<SceneManager> sceneManager(nullptr);
   Input::InputManager inputManager;
+
+  // Initalize Server
+  boost::asio::io_context io_context;
+  std::jthread serverThread(RunServer, std::ref(io_context));
 
   try {
     resourceManager = std::make_unique<Resource::ResourceManager>();
@@ -75,7 +91,6 @@ int main(int argc, char* argv[]) {
 
     sceneManager->UpdateSceneActors();
     graphicsManager->RefreshScreen();
-
   }
   return 0;
 }

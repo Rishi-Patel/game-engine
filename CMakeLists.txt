@@ -110,7 +110,20 @@ FetchContent_Declare(
   GIT_PROGRESS TRUE
 )
 FetchContent_MakeAvailable(Boost)
+if(MSVC)
+    add_compile_options(/EHsc)
+endif(MSVC)
 
+if(NOT TARGET Freetype::Freetype)
+    FetchContent_Declare(
+      FreeType
+      GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype
+      GIT_TAG VER-2-13-3
+      GIT_SHALLOW TRUE
+      GIT_PROGRESS TRUE
+    )
+    FetchContent_MakeAvailable(FreeType)
+endif()
 
 file(GLOB src
      "src/*.h"
