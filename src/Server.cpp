@@ -1,5 +1,7 @@
 #include "Server.h"
 
+#include <iostream>
+
 using boost::asio::ip::udp;
 
 std::string make_daytime_string() {
@@ -14,6 +16,7 @@ udp_server::udp_server(boost::asio::io_context& io_context)
 }
 
 void udp_server::start_receive() {
+  std::cout << "Waiting for request...\n";
   socket_.async_receive_from(
       boost::asio::buffer(recv_buffer_), remote_endpoint_,
       std::bind(&udp_server::handle_receive, this,
@@ -26,12 +29,14 @@ void udp_server::handle_receive(const boost::system::error_code& error,
   if (!error) {
     std::shared_ptr<std::string> message(
         new std::string(make_daytime_string()));
+    std::cout << "Received request" << std::endl;
 
     socket_.async_send_to(
         boost::asio::buffer(*message), remote_endpoint_,
         std::bind(&udp_server::handle_send, this, message,
                   boost::asio::placeholders::error,
                   boost::asio::placeholders::bytes_transferred));
+    std::cout << "Sent message:" << *message << std::endl;
 
     start_receive();
   }

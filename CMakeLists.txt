@@ -129,7 +129,9 @@ file(GLOB src
      "src/*.h"
      "src/*.cpp"
 )
-
+message("${src}")
+list(REMOVE_ITEM src "${CMAKE_CURRENT_SOURCE_DIR}/src/Client.cpp")
+message("${src}")
 add_executable (game_engine ${glew_src} ${lua_src} ${src})
 add_dependencies(game_engine lua)
 add_dependencies(game_engine glew)
@@ -150,3 +152,6 @@ target_link_libraries(game_engine PRIVATE Freetype::Freetype)
 target_link_libraries(game_engine PRIVATE ${OPENGL_LIBRARY}) # filled by "find_package(OpenGL REQUIRED)" 
 target_link_libraries(game_engine PRIVATE Tracy::TracyClient) 
 target_link_libraries(game_engine PRIVATE Boost::asio)
+
+add_executable(client "src/Client.cpp")
+target_link_libraries(client PRIVATE Boost::asio)

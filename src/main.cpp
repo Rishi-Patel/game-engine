@@ -92,5 +92,9 @@ int main(int argc, char* argv[]) {
     sceneManager->UpdateSceneActors();
     graphicsManager->RefreshScreen();
   }
+
+  io_context.stop();
+  serverThread.join();
+
   return 0;
 }
