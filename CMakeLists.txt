@@ -114,16 +114,22 @@ if(MSVC)
     add_compile_options(/EHsc)
 endif(MSVC)
 
-if(NOT TARGET Freetype::Freetype)
+if(NOT TARGET freetype)
     FetchContent_Declare(
-      FreeType
+      freetype
       GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype
       GIT_TAG VER-2-13-3
       GIT_SHALLOW TRUE
       GIT_PROGRESS TRUE
     )
-    FetchContent_MakeAvailable(FreeType)
+    FetchContent_MakeAvailable(freetype)
 endif()
+
+FetchContent_Declare(Quill
+    GIT_REPOSITORY https://github.com/odygrd/quill.git
+    GIT_TAG v10.0.0
+)
+FetchContent_MakeAvailable(Quill)
 
 file(GLOB src
      "src/*.h"
@@ -148,10 +154,11 @@ target_link_libraries(game_engine PRIVATE SDL2_mixer::SDL2_mixer-static)
 target_link_libraries(game_engine PRIVATE box2d)
 target_link_libraries(game_engine PRIVATE LuaBridge)
 target_link_libraries(game_engine PRIVATE glm::glm)
-target_link_libraries(game_engine PRIVATE Freetype::Freetype)
+target_link_libraries(game_engine PRIVATE freetype)
 target_link_libraries(game_engine PRIVATE ${OPENGL_LIBRARY}) # filled by "find_package(OpenGL REQUIRED)" 
 target_link_libraries(game_engine PRIVATE Tracy::TracyClient) 
 target_link_libraries(game_engine PRIVATE Boost::asio)
+target_link_libraries(game_engine PRIVATE quill::quill)
 
 add_executable(client "src/Client.cpp")
 target_link_libraries(client PRIVATE Boost::asio)

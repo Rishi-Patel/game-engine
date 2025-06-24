@@ -12,6 +12,7 @@
 #include "AudioManager.h"
 #include "GraphicsManager.h"
 #include "InputManager.h"
+#include "quill/Backend.h"
 #include "ResourceManager.h"
 #include "SceneManager.h"
 #include "Server.h"
@@ -38,6 +39,7 @@ int main(int argc, char* argv[]) {
   std::unique_ptr<AudioManager> audioManager(nullptr);
   std::unique_ptr<SceneManager> sceneManager(nullptr);
   Input::InputManager inputManager;
+  quill::Backend::start();
 
   // Initalize Server
   boost::asio::io_context io_context;

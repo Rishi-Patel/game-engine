@@ -11,6 +11,7 @@
 class udp_server {
  public:
   udp_server(boost::asio::io_context& io_context);
+  ~udp_server();
 
  private:
   void start_receive();
