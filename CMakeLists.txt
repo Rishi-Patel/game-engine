@@ -51,29 +51,24 @@ FetchContent_Declare(glm
 FetchContent_MakeAvailable(glm)
 
 find_package(OpenGL REQUIRED COMPONENTS OpenGL)
-ExternalProject_Add(glew
-    PREFIX "${CMAKE_CURRENT_BINARY_DIR}/_deps/glew"
-    URL https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0.tgz
-    BUILD_COMMAND ""
-    CONFIGURE_COMMAND ""
-    INSTALL_COMMAND ""
-)
-file(GLOB glew_src
-     "${CMAKE_CURRENT_BINARY_DIR}/_deps/glew/src/glew/src/glew.c"
-)
 
-ExternalProject_Add(lua 
-    PREFIX "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua"
+FetchContent_Declare(glew
+    URL https://sourceforge.net/projects/glew/files/glew/2.1.0/glew-2.1.0.tgz
+    SOURCE_SUBDIR "build/cmake"
+)
+FetchContent_MakeAvailable(glew)
+
+FetchContent_Declare(lua
     URL https://www.lua.org/ftp/lua-5.4.7.tar.gz
-    BUILD_COMMAND ""
-    CONFIGURE_COMMAND ""
-    INSTALL_COMMAND ""
 )
+FetchContent_MakeAvailable(lua)
 file(GLOB lua_src
-     "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua/src/lua/src/*.h"
-     "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua/src/lua/src/*.c"
+     "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua-src/src/*.h"
+     "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua-src/src/*.c"
 )
-list(REMOVE_ITEM lua_src "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua/src/lua/src/luac.c" "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua/src/lua/src/lua.c")
+list(REMOVE_ITEM lua_src "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua-src/src/luac.c" "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua-src/src/lua.c")
+add_library(lua STATIC ${lua_src})
+
 
 FetchContent_Declare(LuaBridge
     GIT_REPOSITORY https://github.com/vinniefalco/LuaBridge.git
@@ -132,19 +127,16 @@ FetchContent_Declare(Quill
 FetchContent_MakeAvailable(Quill)
 
 file(GLOB src
-     "src/*.h"
      "src/*.cpp"
 )
-message("${src}")
-list(REMOVE_ITEM src "${CMAKE_CURRENT_SOURCE_DIR}/src/Client.cpp")
-message("${src}")
-add_executable (game_engine ${glew_src} ${lua_src} ${src})
-add_dependencies(game_engine lua)
-add_dependencies(game_engine glew)
 
-target_include_directories(game_engine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua/src/lua/src")
+list(REMOVE_ITEM src "${CMAKE_CURRENT_SOURCE_DIR}/src/Client.cpp")
+
+add_executable (game_engine ${src})
+
+target_include_directories(game_engine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua-src/src")
+target_include_directories(game_engine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/_deps/glew-src/include")
 target_include_directories(game_engine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/_deps/rapidjson-src/include")
-target_include_directories(game_engine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/_deps/glew/src/glew/include")
 
 target_link_libraries(game_engine PRIVATE SDL2::SDL2main)
 target_link_libraries(game_engine PRIVATE SDL2::SDL2-static)
@@ -152,6 +144,7 @@ target_link_libraries(game_engine PRIVATE SDL2_ttf::SDL2_ttf-static)
 target_link_libraries(game_engine PRIVATE SDL2_image::SDL2_image-static)
 target_link_libraries(game_engine PRIVATE SDL2_mixer::SDL2_mixer-static)
 target_link_libraries(game_engine PRIVATE box2d)
+target_link_libraries(game_engine PRIVATE lua)
 target_link_libraries(game_engine PRIVATE LuaBridge)
 target_link_libraries(game_engine PRIVATE glm::glm)
 target_link_libraries(game_engine PRIVATE freetype)
@@ -159,6 +152,7 @@ target_link_libraries(game_engine PRIVATE ${OPENGL_LIBRARY}) # filled by "find_p
 target_link_libraries(game_engine PRIVATE Tracy::TracyClient) 
 target_link_libraries(game_engine PRIVATE Boost::asio)
 target_link_libraries(game_engine PRIVATE quill::quill)
+target_link_libraries(game_engine PRIVATE glew_s)
 
 add_executable(client "src/Client.cpp")
 target_link_libraries(client PRIVATE Boost::asio)
