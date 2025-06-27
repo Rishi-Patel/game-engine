@@ -27,6 +27,17 @@
           "value": "-DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN"
         }
       ]
+    },
+    {
+      "name": "x64-Release",
+      "generator": "Visual Studio 17 2022",
+      "configurationType": "RelWithDebInfo",
+      "inheritEnvironments": [ "msvc_x86" ],
+      "buildRoot": "${projectDir}\\build\\${name}",
+      "installRoot": "${projectDir}\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": ""
     }
   ]
 }
