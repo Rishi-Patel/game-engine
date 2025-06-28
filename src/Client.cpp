@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     boost::asio::io_context io_context;
     udp::resolver resolver(io_context);
     udp::endpoint receiver_endpoint =
-        *resolver.resolve(udp::v4(), "XPS-17-PATELRIS", "daytime").begin();
+        *resolver.resolve(udp::v4(), "127.0.0.1", "1330").begin();
     udp::socket socket(io_context);
     socket.open(udp::v4());
     for (int i = 0; i < 10; i++) {
