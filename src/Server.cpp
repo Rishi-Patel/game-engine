@@ -1,62 +1,228 @@
 #include "Server.h"
 
+#include <array>
+#include <chrono>
+#include <cstring>
+#include <queue>
+#include <ranges>
+#include <string>
+#include <thread>
+#include <vector>
+
+#include "NetworkMessage.h"
 #include "quill/Frontend.h"
-#include "quill/Logger.h"
 #include "quill/LogMacros.h"
 #include "quill/sinks/ConsoleSink.h"
-#include "quill/std/Array.h"
-
-using boost::asio::ip::udp;
+#include "quill/std/Vector.h"
 
 static constexpr auto kLoggerName = "NetworkThread";
 
-std::string make_daytime_string() {
-  using namespace std;  // For time_t, time and ctime;
-  time_t now = time(0);
-  return ctime(&now);
+struct Session {
+  bool IsActive;
+  boost::asio::ip::tcp::socket Socket;
+  uint32_t Id;
+  boost::asio::steady_timer HeartbeatTimer;
+  NetworkMessage LastMessage;
+  std::queue<NetworkMessage> PendingWrites;
+  std::array<uint8_t, 1029> RawByteBuffer;
+};
+
+NetworkManager::NetworkManager(boost::asio::io_context &ioContext, int port)
+    : _ioContext(ioContext),
+      _acceptor(_ioContext, boost::asio::ip::tcp::endpoint(
+                                boost::asio::ip::tcp::v4(), port)),
+      _nextSessionId(1) {
+  _logger = quill::Frontend::create_or_get_logger(
+      kLoggerName,
+      quill::Frontend::create_or_get_sink<quill::ConsoleSink>("sink_id_1"));
+
+  LOG_INFO(_logger, "TCP Server started at {}:{}",
+           _acceptor.local_endpoint().address().to_string(),
+           _acceptor.local_endpoint().port());
+  AsyncAccept();
 }
 
-udp_server::udp_server(boost::asio::io_context& io_context)
-    : socket_(io_context, udp::endpoint(udp::v4(), 1330)) {
-  auto console_sink =
-      quill::Frontend::create_or_get_sink<quill::ConsoleSink>("sink_id_1");
-  quill::Frontend::create_or_get_logger(kLoggerName, std::move(console_sink));
-  quill::Frontend::get_logger(kLoggerName)
-      ->set_log_level(quill::LogLevel::TraceL3);
-  start_receive();
+NetworkManager::~NetworkManager() {
+  quill::Frontend::remove_logger_blocking(_logger);
 }
 
-udp_server::~udp_server() {}
+void NetworkManager::SendNetworkMessage(uint32_t sessionId,
+                                        NetworkMessage &msg) {
+  boost::asio::post(_ioContext, [this, sessionId, msg]() {
+    std::shared_ptr<Session> session = nullptr;
 
-void udp_server::start_receive() {
-  LOG_INFO(quill::Frontend::get_logger(kLoggerName),
-           "Waiting for request...\n");
-  socket_.async_receive_from(
-      boost::asio::buffer(recv_buffer_), remote_endpoint_,
-      std::bind(&udp_server::handle_receive, this,
-                boost::asio::placeholders::error,
-                boost::asio::placeholders::bytes_transferred));
+    {
+      std::lock_guard<std::mutex> lock(_sessionLock);
+      auto sessionItr = _sessions.find(sessionId);
+      if (sessionItr == _sessions.end()) {
+        return;
+      }
+      session = sessionItr->second;
+    }
+
+    // If there is something in the queue, it means there is an active write
+    // going on and we are backed up
+    bool isCurrentlyWriting = !session->PendingWrites.empty();
+    session->PendingWrites.emplace(std::move(msg));
+    AsyncSend(session);
+  });
 }
 
-void udp_server::handle_receive(const boost::system::error_code& error,
-                                std::size_t /*bytes_transferred*/) {
-  if (!error) {
-    std::shared_ptr<std::string> message(
-        new std::string(make_daytime_string()));
-    LOG_INFO(quill::Frontend::get_logger(kLoggerName), "Received request\n");
+void NetworkManager::BroadcastMessage(const NetworkMessage &msg) {
+  boost::asio::post(_ioContext, [this, msg]() {
+    // Copy all the sessions in case its deleted. Worst case we send a message
+    // to a session thats been terminated but thats not a big deal
+    std::vector<std::shared_ptr<Session>> sessions;
+    {
+      std::lock_guard<std::mutex> lock(_sessionLock);
+      std::ranges::transform(_sessions.begin(), _sessions.end(),
+                             std::back_inserter(sessions),
+                             [](const auto &elm) { return elm.second; });
+    }
+    for (auto &session : sessions) {
+      // If there is something in the queue, it means there is an active write
+      // going on and we are backed up
+      bool isCurrentlyWriting = !session->PendingWrites.empty();
+      session->PendingWrites.emplace(msg);
+      AsyncSend(session);
+    }
+  });
+}
 
-    socket_.async_send_to(
-        boost::asio::buffer(*message), remote_endpoint_,
-        std::bind(&udp_server::handle_send, this, message,
-                  boost::asio::placeholders::error,
-                  boost::asio::placeholders::bytes_transferred));
-    LOG_INFO(quill::Frontend::get_logger(kLoggerName), "Sent message: {}\n",
-             *message);
+void NetworkManager::RemoveSession(uint32_t sessionId) {
+  {
+    std::lock_guard<std::mutex> lock(_sessionLock);
+    if (_sessions.find(sessionId) == _sessions.end()) {
+      return;
+    }
+    _sessions[sessionId]->IsActive = false;
 
-    start_receive();
+    _sessions.erase(sessionId);
+  }
+
+  // Notify other sessions
+  NetworkMessage leave_msg(MessageType::DISCONNECT);
+  std::memcpy(leave_msg.Data.data(), &sessionId, sizeof(uint32_t));
+  leave_msg.Size = sizeof(uint32_t);
+  BroadcastMessage(leave_msg);
+}
+
+void NetworkManager::AsyncAccept() {
+  _acceptor.async_accept(
+      [this](std::error_code ec, boost::asio::ip::tcp::socket socket) {
+        if (!ec) {
+          uint32_t sessionId = _nextSessionId++;
+          auto session =
+              std::make_shared<Session>(false, std::move(socket), sessionId,
+                                        boost::asio::steady_timer(_ioContext));
+          {
+            std::lock_guard<std::mutex> lock(_sessionLock);
+            _sessions.emplace(sessionId, session);
+          }
+          LOG_INFO(_logger, "New Session created, ID: {}", sessionId);
+
+          StartSession(session);
+        }
+        AsyncAccept();
+      });
+}
+
+void NetworkManager::AsyncSend(std::shared_ptr<Session> session) {
+  boost::asio::async_write(
+      session->Socket,
+      boost::asio::buffer(Serialize(session->PendingWrites.front()),
+                          session->PendingWrites.front().Size),
+      [this, session](boost::system::error_code ec, std::size_t bytesSent) {
+        LOG_INFO(_logger, "Sending data");
+        LOG_INFO(_logger,
+                 "Message Sent; Session={}; Type={}; Size={}; "
+                 "BytesSent={}",
+                 session->Id,
+                 static_cast<uint32_t>(session->PendingWrites.front().Type),
+                 session->PendingWrites.front().Size, bytesSent);
+        if (!ec) {
+          session->PendingWrites.pop();
+          if (!session->PendingWrites.empty()) {
+            AsyncSend(session);
+          }
+        } else {
+          RemoveSession(session->Id);
+        }
+      });
+}
+
+void NetworkManager::StartSession(std::shared_ptr<Session> &session) {
+  session->IsActive = true;
+  StartHeartbeatTimer(session);
+  AcceptSessionMessage(session);
+}
+
+void NetworkManager::StartHeartbeatTimer(std::shared_ptr<Session> session) {
+  session->HeartbeatTimer.expires_after(std::chrono::seconds(1));
+  session->HeartbeatTimer.async_wait(
+      [this, session](const boost::system::error_code &ec) {
+        if (!session->IsActive || ec) {
+          LOG_WARNING(_logger, "Session {} failed heartbeat check, removing",
+                      session->Id);
+          RemoveSession(session->Id);
+          return;
+        }
+        session->IsActive = false;
+        StartHeartbeatTimer(session);
+      });
+}
+
+void NetworkManager::AckHeartbeat(uint32_t sessionId) {
+  {
+    std::lock_guard<std::mutex> lock(_sessionLock);
+    auto it = _sessions.find(sessionId);
+    if (it == _sessions.end()) {
+      return;
+    }
+    it->second->IsActive = true;
+  }
+  LOG_INFO(_logger, "Heartbeat received from session {}", sessionId);
+  NetworkMessage msg;
+  msg.Size = MESSAGE_SIZE;
+  msg.Type = MessageType::HEARTBEAT;
+  msg.Data.fill(0);
+  SendNetworkMessage(sessionId, msg);
+}
+
+void NetworkManager::HandleSessionMessage(uint32_t sessionId,
+                                          const NetworkMessage &msg) {
+  switch (msg.Type) {
+    case MessageType::CONNECT:
+      break;
+    case MessageType::DISCONNECT:
+      RemoveSession(sessionId);
+      break;
+    case MessageType::HEARTBEAT:
+      AckHeartbeat(sessionId);
+      break;
+    case MessageType::USER:
+      LOG_INFO(_logger, "Message Received!");
+      break;
+    default:
+      break;
   }
 }
 
-void udp_server::handle_send(std::shared_ptr<std::string> /*message*/,
-                             const boost::system::error_code& /*error*/,
-                             std::size_t /*bytes_transferred*/) {}
+void NetworkManager::AcceptSessionMessage(std::shared_ptr<Session> session) {
+  boost::asio::async_read(
+      session->Socket, boost::asio::buffer(&session->RawByteBuffer, 1029),
+      [this, session](std::error_code ec, std::size_t bytesRecv) {
+        session->LastMessage = Deserialize(session->RawByteBuffer);
+        LOG_INFO(_logger,
+                 "Message Received; Session={}; Type={}; Size={}; "
+                 "BytesRecv={}",
+                 session->Id, static_cast<uint32_t>(session->LastMessage.Type),
+                 session->LastMessage.Size, bytesRecv);
+        if (!ec) {
+          HandleSessionMessage(session->Id, session->LastMessage);
+          AcceptSessionMessage(session);
+        } else {
+          RemoveSession(session->Id);
+        }
+      });
+}

@@ -1,29 +1,36 @@
-#pragma once
-
-#include <array>
 #include <boost/asio.hpp>
-#include <ctime>
-#include <functional>
-#include <iostream>
 #include <memory>
-#include <string>
+#include <mutex>
+#include <unordered_map>
 
-class udp_server {
+#include "NetworkMessage.h"
+#include "quill/Logger.h"
+
+struct Session;
+
+class NetworkManager {
  public:
-  udp_server(boost::asio::io_context& io_context);
-  ~udp_server();
+  NetworkManager(boost::asio::io_context &ioContext, int port);
+  ~NetworkManager();
+
+  void SendNetworkMessage(uint32_t sessionId, NetworkMessage &msg);
+  void BroadcastMessage(const NetworkMessage &msg);
+  void RemoveSession(uint32_t sessionId);
 
  private:
-  void start_receive();
+  uint32_t _nextSessionId;
+  boost::asio::io_context &_ioContext;
+  boost::asio::ip::tcp::acceptor _acceptor;
+  quill::Logger *_logger;
 
-  void handle_receive(const boost::system::error_code& error,
-                      std::size_t /*bytes_transferred*/);
+  std::unordered_map<uint32_t, std::shared_ptr<Session>> _sessions;
+  std::mutex _sessionLock;
 
-  void handle_send(std::shared_ptr<std::string> /*message*/,
-                   const boost::system::error_code& /*error*/,
-                   std::size_t /*bytes_transferred*/);
-
-  boost::asio::ip::udp::socket socket_;
-  boost::asio::ip::udp::endpoint remote_endpoint_;
-  std::array<char, 1> recv_buffer_;
+  void AsyncAccept();
+  void AsyncSend(std::shared_ptr<Session> session);
+  void StartSession(std::shared_ptr<Session> &session);
+  void StartHeartbeatTimer(std::shared_ptr<Session> session);
+  void AckHeartbeat(uint32_t sessionId);
+  void HandleSessionMessage(uint32_t sessionId, const NetworkMessage &msg);
+  void AcceptSessionMessage(std::shared_ptr<Session> session);
 };

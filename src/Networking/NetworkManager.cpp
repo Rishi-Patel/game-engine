@@ -12,10 +12,9 @@
 #include <vector>
 
 #include "quill/Frontend.h"
-#include "quill/LogMacros.h"
 #include "quill/Logger.h"
+#include "quill/LogMacros.h"
 #include "quill/sinks/ConsoleSink.h"
-#include "quill/std/Array.h"
 
 static constexpr auto kLoggerName = "NetworkThread";
 
@@ -36,8 +35,27 @@ struct NetworkMessage {
   std::array<uint8_t, MESSAGE_SIZE> Data;
 };
 
+std::array<uint8_t, sizeof(NetworkMessage)> Serialize(
+    const NetworkMessage &msg) {
+  std::array<uint8_t, sizeof(NetworkMessage)> buffer{};
+  size_t offset = 0;
+  // Copy Type: 1 byte so no endian worries
+  std::memcpy(buffer.data() + offset, &msg.Type, sizeof(msg.Type));
+  offset += sizeof(msg.Type);
+
+  // Copy Size
+  uint32_t net_size =
+      boost::asio::detail::socket_ops::host_to_network_long(msg.Size);
+  std::memcpy(buffer.data() + offset, &net_size, sizeof(net_size));
+  offset += sizeof(net_size);
+
+  std::memcpy(buffer.data() + offset, msg.Data.data(), msg.Data.size());
+
+  return buffer;
+}
+
 class NetworkManager {
-public:
+ public:
   NetworkManager(Logger *logger, boost::asio::io_context &ioContext, int port)
       : _ioContext(ioContext),
         _acceptor(_ioContext, boost::asio::ip::tcp::endpoint(
@@ -99,7 +117,7 @@ public:
     BroadcastMessage(leave_msg);
   }
 
-private:
+ private:
   struct Session {
     bool IsActive;
     boost::asio::ip::tcp::socket Socket;
@@ -131,17 +149,16 @@ private:
   void AsyncSend(std::shared_ptr<Session> &session) {
     boost::asio::async_write(
         session->Socket,
-        boost::asio::buffer(session->PendingWrites.front().data(),
-                            session->PendingWrites.front().Size()),
+        boost::asio::buffer(Serialize(session->PendingWrites.front()),
         [this](boost::system::error_code ec, std::size_t /*length*/) {
-          if (!ec) {
-            session->PendingWrites.pop();
-            if (!session->PendingWrites.empty()) {
-              AsyncSend();
-            }
-          } else {
-            RemoveSession(session->Id);
-          }
+      if (!ec) {
+        session->PendingWrites.pop();
+        if (!session->PendingWrites.empty()) {
+          AsyncSend(session);
+        }
+      } else {
+        RemoveSession(session->Id);
+      }
         });
   }
 
@@ -153,8 +170,11 @@ private:
   void AcceptSessionMessage(std::shared_ptr<Session> &session) {
     asio::async_read(
         session->Socket,
-        asio::buffer(&session->LastMessage, sizeof(NetworkMessage)),
+        /* asio::buffer(&session->LastMessage, sizeof(NetworkMessage))*/,
         [this](std::error_code ec, std::size_t) {
+          msg.Size =
+              boost::asio::detail::socket_ops::network_to_host_long(msg.Size);
+
           LOG_DEBUG(_logger->GetLogger(),
                     "Message Received; Session={}; Type={}; Size={}",
                     session->Id, session->LastMessage.Type,
@@ -170,22 +190,22 @@ private:
 
   void HandleSessionMessage(uint32_t sessionId, const NetworkMessage &msg) {
     switch (msg.Type) {
-    case MessageType::CONNECT:
-      break;
-    case MessageType::DISCONNECT:
-      RemoveSession(sessionId);
-      break;
-    case MessageType::HEARTBEAT:
-      AckHeartbeat();
-      break;
-    case MessageType::USER:
-      break;
-    default:
-      break;
+      case MessageType::CONNECT:
+        break;
+      case MessageType::DISCONNECT:
+        RemoveSession(sessionId);
+        break;
+      case MessageType::HEARTBEAT:
+        AckHeartbeat();
+        break;
+      case MessageType::USER:
+        break;
+      default:
+        break;
     }
   }
 
-private:
+ private:
   uint32_t _nextSessionId;
   boost::asio::io_context &_ioContext;
   boost::asio::ip::tcp::acceptor _acceptor;

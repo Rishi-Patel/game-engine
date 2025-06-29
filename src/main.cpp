@@ -24,7 +24,7 @@ SceneManager* scene;
 
 void RunServer(boost::asio::io_context& io_context) {
   try {
-    udp_server server(io_context);
+    NetworkManager server(io_context, 1330);
     io_context.run();
   } catch (std::exception& e) {
     std::cerr << e.what() << std::endl;

@@ -4,7 +4,7 @@
       "name": "x64-Debug",
       "generator": "Visual Studio 17 2022",
       "configurationType": "Debug",
-      "inheritEnvironments": [ "msvc_x86" ],
+      "inheritEnvironments": [ "msvc_x64_x64" ],
       "buildRoot": "${projectDir}\\build\\${name}",
       "installRoot": "${projectDir}\\install\\${name}",
       "cmakeCommandArgs": "",
@@ -24,7 +24,8 @@
       "variables": [
         {
           "name": "CMAKE_CXX_FLAGS",
-          "value": "-DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN"
+          "value": "-DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN",
+          "type": "STRING"
         }
       ]
     },
