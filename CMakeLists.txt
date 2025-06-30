@@ -133,6 +133,11 @@ file(GLOB src
 list(REMOVE_ITEM src "${CMAKE_CURRENT_SOURCE_DIR}/src/Client.cpp")
 
 add_executable (game_engine ${src})
+add_custom_command(TARGET game_engine POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/resources" "$<TARGET_FILE_DIR:game_engine>/resources"
+    COMMENT "Copying resources directory to build directory"
+)
 
 target_include_directories(game_engine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua-src/src")
 target_include_directories(game_engine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/_deps/glew-src/include")

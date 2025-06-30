@@ -12,10 +12,10 @@
 #include "AudioManager.h"
 #include "GraphicsManager.h"
 #include "InputManager.h"
+#include "NetworkManager.h"
 #include "quill/Backend.h"
 #include "ResourceManager.h"
 #include "SceneManager.h"
-#include "Server.h"
 
 constexpr auto BACKGROUND_SFX_CHANNEL = 0;
 constexpr auto SCORE_SFX_CHANNEL = 1;
