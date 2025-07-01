@@ -24,7 +24,7 @@ struct Session {
   boost::asio::steady_timer HeartbeatTimer;
   NetworkMessage LastMessage;
   std::queue<NetworkMessage> PendingWrites;
-  std::array<uint8_t, 1029> RawByteBuffer;
+  std::array<uint8_t, MESSAGE_SIZE> RawByteBuffer;
 };
 
 NetworkManager::NetworkManager(boost::asio::io_context &ioContext, int port)
@@ -62,7 +62,6 @@ void NetworkManager::SendNetworkMessage(uint32_t sessionId,
 
     // If there is something in the queue, it means there is an active write
     // going on and we are backed up
-    bool isCurrentlyWriting = !session->PendingWrites.empty();
     session->PendingWrites.emplace(std::move(msg));
     AsyncSend(session);
   });
@@ -80,9 +79,11 @@ void NetworkManager::BroadcastMessage(const NetworkMessage &msg) {
                              [](const auto &elm) { return elm.second; });
     }
     for (auto &session : sessions) {
+      if (!session->IsActive) {
+        continue;
+      }
       // If there is something in the queue, it means there is an active write
       // going on and we are backed up
-      bool isCurrentlyWriting = !session->PendingWrites.empty();
       session->PendingWrites.emplace(msg);
       AsyncSend(session);
     }
@@ -128,24 +129,30 @@ void NetworkManager::AsyncAccept() {
 }
 
 void NetworkManager::AsyncSend(std::shared_ptr<Session> session) {
+  if (session->PendingWrites.empty()) {
+    return;
+  }
+
   boost::asio::async_write(
       session->Socket,
       boost::asio::buffer(Serialize(session->PendingWrites.front()),
                           session->PendingWrites.front().Size),
       [this, session](boost::system::error_code ec, std::size_t bytesSent) {
-        LOG_INFO(_logger, "Sending data");
-        LOG_INFO(_logger,
-                 "Message Sent; Session={}; Type={}; Size={}; "
-                 "BytesSent={}",
-                 session->Id,
-                 static_cast<uint32_t>(session->PendingWrites.front().Type),
-                 session->PendingWrites.front().Size, bytesSent);
+        LOG_DEBUG(_logger,
+                  "Message Sent; Session={}; Type={}; Size={}; "
+                  "BytesSent={}",
+                  session->Id,
+                  static_cast<uint32_t>(session->PendingWrites.front().Type),
+                  session->PendingWrites.front().Size, bytesSent);
         if (!ec) {
           session->PendingWrites.pop();
           if (!session->PendingWrites.empty()) {
             AsyncSend(session);
           }
         } else {
+          LOG_WARNING(_logger,
+                      "Failed to send message to session {}: [{}] Error {}",
+                      session->Id, ec.value(), ec.message());
           RemoveSession(session->Id);
         }
       });
@@ -159,17 +166,22 @@ void NetworkManager::StartSession(std::shared_ptr<Session> &session) {
 
 void NetworkManager::StartHeartbeatTimer(std::shared_ptr<Session> session) {
   session->HeartbeatTimer.expires_after(std::chrono::seconds(1));
-  session->HeartbeatTimer.async_wait(
-      [this, session](const boost::system::error_code &ec) {
-        if (!session->IsActive || ec) {
-          LOG_WARNING(_logger, "Session {} failed heartbeat check, removing",
-                      session->Id);
-          RemoveSession(session->Id);
-          return;
-        }
-        session->IsActive = false;
-        StartHeartbeatTimer(session);
-      });
+  session->HeartbeatTimer.async_wait([this, session](
+                                         const boost::system::error_code &ec) {
+    if (!session->IsActive || ec) {
+      if (ec) {
+        LOG_WARNING(_logger,
+                    "Failed to accept hearbeat from session {}: [{}] Error {}",
+                    session->Id, ec.value(), ec.message());
+      } else {
+        LOG_WARNING(_logger, "Session {} failed heartbeat check", session->Id);
+      }
+      RemoveSession(session->Id);
+      return;
+    }
+    session->IsActive = false;
+    StartHeartbeatTimer(session);
+  });
 }
 
 void NetworkManager::AckHeartbeat(uint32_t sessionId) {
@@ -181,7 +193,7 @@ void NetworkManager::AckHeartbeat(uint32_t sessionId) {
     }
     it->second->IsActive = true;
   }
-  LOG_INFO(_logger, "Heartbeat received from session {}", sessionId);
+  LOG_DEBUG(_logger, "Heartbeat received from session {}", sessionId);
   NetworkMessage msg;
   msg.Size = MESSAGE_SIZE;
   msg.Type = MessageType::HEARTBEAT;
@@ -201,7 +213,6 @@ void NetworkManager::HandleSessionMessage(uint32_t sessionId,
       AckHeartbeat(sessionId);
       break;
     case MessageType::USER:
-      LOG_INFO(_logger, "Message Received!");
       break;
     default:
       break;
@@ -210,18 +221,22 @@ void NetworkManager::HandleSessionMessage(uint32_t sessionId,
 
 void NetworkManager::AcceptSessionMessage(std::shared_ptr<Session> session) {
   boost::asio::async_read(
-      session->Socket, boost::asio::buffer(&session->RawByteBuffer, 1029),
+      session->Socket,
+      boost::asio::buffer(&session->RawByteBuffer, MESSAGE_SIZE),
       [this, session](std::error_code ec, std::size_t bytesRecv) {
         session->LastMessage = Deserialize(session->RawByteBuffer);
-        LOG_INFO(_logger,
-                 "Message Received; Session={}; Type={}; Size={}; "
-                 "BytesRecv={}",
-                 session->Id, static_cast<uint32_t>(session->LastMessage.Type),
-                 session->LastMessage.Size, bytesRecv);
+        LOG_DEBUG(_logger,
+                  "Message Received; Session={}; Type={}; Size={}; "
+                  "BytesRecv={}",
+                  session->Id, static_cast<uint32_t>(session->LastMessage.Type),
+                  session->LastMessage.Size, bytesRecv);
         if (!ec) {
           HandleSessionMessage(session->Id, session->LastMessage);
           AcceptSessionMessage(session);
         } else {
+          LOG_WARNING(_logger,
+                      "Failed to accept message from session {}: [{}] Error {}",
+                      session->Id, ec.value(), ec.message());
           RemoveSession(session->Id);
         }
       });

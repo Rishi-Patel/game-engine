@@ -41,10 +41,6 @@ int main(int argc, char* argv[]) {
   Input::InputManager inputManager;
   quill::Backend::start();
 
-  // Initalize Server
-  boost::asio::io_context io_context;
-  std::jthread serverThread(RunServer, std::ref(io_context));
-
   try {
     resourceManager = std::make_unique<Resource::ResourceManager>();
   } catch (std::runtime_error& err) {
@@ -86,6 +82,10 @@ int main(int argc, char* argv[]) {
   }
 
   scene = sceneManager.get();
+
+  // Initalize Server
+  boost::asio::io_context io_context;
+  std::jthread serverThread(RunServer, std::ref(io_context));
 
   while (running) {
     graphicsManager->ClearScreen();

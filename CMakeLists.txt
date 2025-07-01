@@ -159,5 +159,5 @@ target_link_libraries(game_engine PRIVATE Boost::asio)
 target_link_libraries(game_engine PRIVATE quill::quill)
 target_link_libraries(game_engine PRIVATE glew_s)
 
-add_executable(client "src/Client.cpp")
+add_executable(client "src/Client.cpp" "src/NetworkMessage.cpp")
 target_link_libraries(client PRIVATE Boost::asio)
