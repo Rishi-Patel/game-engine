@@ -94,9 +94,9 @@ class GraphicsManager::GraphicsManagerImpl {
   void LoadParticle(const std::string &particleName);
   void AddFont(const std::string &font, unsigned int fontSize);
   void DrawSprite(const SpriteInfo &sprite);
-  void DrawText(const std::string &font, unsigned int fontSize,
-                const std::string &text, int x, int y,
-                const Graphics::RGBA &color);
+  void RenderText(const std::string &font, unsigned int fontSize,
+                  const std::string &text, int x, int y,
+                  const Graphics::RGBA &color);
   std::pair<float, float> GetSpriteDimension(const std::string &imageName);
   std::pair<int, int> GetScreenDimension();
 
@@ -431,7 +431,7 @@ void GraphicsManager::GraphicsManagerImpl::HandleRequests() {
   }
 }
 
-void GraphicsManager::GraphicsManagerImpl::DrawText(
+void GraphicsManager::GraphicsManagerImpl::RenderText(
     const std::string &font, unsigned int fontSize, const std::string &text,
     int x, int y, const Graphics::RGBA &color) {
   if (_fonts.find(font) == _fonts.end() ||
@@ -504,10 +504,10 @@ void GraphicsManager::DrawSprite(const SpriteInfo &sprite) {
   _graphicsManagerImpl->DrawSprite(sprite);
 }
 
-void GraphicsManager::DrawText(const std::string &font, unsigned int fontSize,
-                               const std::string &text, int x, int y,
-                               const Graphics::RGBA &color) {
-  _graphicsManagerImpl->DrawText(font, fontSize, text, x, y, color);
+void GraphicsManager::RenderText(const std::string &font, unsigned int fontSize,
+                                 const std::string &text, int x, int y,
+                                 const Graphics::RGBA &color) {
+  _graphicsManagerImpl->RenderText(font, fontSize, text, x, y, color);
 }
 
 std::pair<float, float> GraphicsManager::GetSpriteDimension(

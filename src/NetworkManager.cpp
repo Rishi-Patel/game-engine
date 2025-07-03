@@ -27,23 +27,34 @@ struct Session {
   std::array<uint8_t, MESSAGE_SIZE> RawByteBuffer;
 };
 
-NetworkManager::NetworkManager(boost::asio::io_context &ioContext, int port)
-    : _ioContext(ioContext),
-      _acceptor(_ioContext, boost::asio::ip::tcp::endpoint(
-                                boost::asio::ip::tcp::v4(), port)),
-      _nextSessionId(1) {
+NetworkManager::NetworkManager(const std::optional<std::string> &hostname,
+                               int port)
+    : _ioContext(boost::asio::io_context()), _nextSessionId(1) {
   _logger = quill::Frontend::create_or_get_logger(
       kLoggerName,
       quill::Frontend::create_or_get_sink<quill::ConsoleSink>("sink_id_1"));
-
-  LOG_INFO(_logger, "TCP Server started at {}:{}",
-           _acceptor.local_endpoint().address().to_string(),
-           _acceptor.local_endpoint().port());
-  AsyncAccept();
+  _networkThread =
+      std::jthread(&NetworkManager::StartNetworkThread, this, hostname, port);
 }
 
 NetworkManager::~NetworkManager() {
+  _ioContext.stop();
+  _networkThread.join();
   quill::Frontend::remove_logger_blocking(_logger);
+}
+
+void NetworkManager::StartNetworkThread(
+    const std::optional<std::string> &hostname, int port) {
+  boost::asio::ip::tcp::acceptor acceptor(
+      _ioContext,
+      boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port));
+
+  LOG_INFO(_logger, "TCP Server started at {}:{}",
+           acceptor.local_endpoint().address().to_string(),
+           acceptor.local_endpoint().port());
+
+  AsyncAccept(acceptor);
+  _ioContext.run();
 }
 
 void NetworkManager::SendNetworkMessage(uint32_t sessionId,
@@ -108,24 +119,24 @@ void NetworkManager::RemoveSession(uint32_t sessionId) {
   BroadcastMessage(leave_msg);
 }
 
-void NetworkManager::AsyncAccept() {
-  _acceptor.async_accept(
-      [this](std::error_code ec, boost::asio::ip::tcp::socket socket) {
-        if (!ec) {
-          uint32_t sessionId = _nextSessionId++;
-          auto session =
-              std::make_shared<Session>(false, std::move(socket), sessionId,
-                                        boost::asio::steady_timer(_ioContext));
-          {
-            std::lock_guard<std::mutex> lock(_sessionLock);
-            _sessions.emplace(sessionId, session);
-          }
-          LOG_INFO(_logger, "New Session created, ID: {}", sessionId);
+void NetworkManager::AsyncAccept(boost::asio::ip::tcp::acceptor &acceptor) {
+  acceptor.async_accept([this, &acceptor](std::error_code ec,
+                                          boost::asio::ip::tcp::socket socket) {
+    if (!ec) {
+      uint32_t sessionId = _nextSessionId++;
+      auto session =
+          std::make_shared<Session>(false, std::move(socket), sessionId,
+                                    boost::asio::steady_timer(_ioContext));
+      {
+        std::lock_guard<std::mutex> lock(_sessionLock);
+        _sessions.emplace(sessionId, session);
+      }
+      LOG_INFO(_logger, "New Session created, ID: {}", sessionId);
 
-          StartSession(session);
-        }
-        AsyncAccept();
-      });
+      StartSession(session);
+    }
+    AsyncAccept(acceptor);
+  });
 }
 
 void NetworkManager::AsyncSend(std::shared_ptr<Session> session) {
@@ -213,9 +224,20 @@ void NetworkManager::HandleSessionMessage(uint32_t sessionId,
       AckHeartbeat(sessionId);
       break;
     case MessageType::USER:
+      HandleUserMessage(msg);
       break;
     default:
       break;
+  }
+}
+
+void NetworkManager::HandleUserMessage(const NetworkMessage &msg) {
+  if (_handleUserPacketCallback) {
+    std::vector<uint8_t> debug(msg.Data.begin(), msg.Data.end());
+    for (auto &v : msg.Data) {
+      LOG_INFO(_logger, "DEBUG MESSAGE = {}; ", debug);
+    }
+    _handleUserPacketCallback(msg.Data);
   }
 }
 
@@ -225,11 +247,11 @@ void NetworkManager::AcceptSessionMessage(std::shared_ptr<Session> session) {
       boost::asio::buffer(&session->RawByteBuffer, MESSAGE_SIZE),
       [this, session](std::error_code ec, std::size_t bytesRecv) {
         session->LastMessage = Deserialize(session->RawByteBuffer);
-        LOG_DEBUG(_logger,
-                  "Message Received; Session={}; Type={}; Size={}; "
-                  "BytesRecv={}",
-                  session->Id, static_cast<uint32_t>(session->LastMessage.Type),
-                  session->LastMessage.Size, bytesRecv);
+        LOG_INFO(_logger,
+                 "Message Received; Session={}; Type={}; Size={}; "
+                 "BytesRecv={}",
+                 session->Id, static_cast<uint32_t>(session->LastMessage.Type),
+                 session->LastMessage.Size, bytesRecv);
         if (!ec) {
           HandleSessionMessage(session->Id, session->LastMessage);
           AcceptSessionMessage(session);

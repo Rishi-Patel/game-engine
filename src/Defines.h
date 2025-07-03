@@ -26,4 +26,9 @@ struct RenderConfig {
   Graphics::RGBA Color{255, 255, 255, 255};
 };
 
+struct NetworkConfig {
+  std::optional<std::string> Hostname;
+  unsigned int Port = 1330;
+};
+
 }  // namespace Resource

@@ -6,40 +6,24 @@
 
 #include "Defines.h"
 
-namespace Resource
-{
+namespace Resource {
 
-class ResourceManager
-{
+class ResourceManager {
+ public:
+  ResourceManager();
 
-  public:
-    ResourceManager();
+  const GameConfig &GetGameConfig() const { return _gameConfigs; }
 
-    const GameConfig &GetGameConfig() const
-    {
-        return _gameConfigs;
-    }
+  const RenderConfig &GetRenderConfig() const { return _renderConfigs; }
 
-    const RenderConfig &GetRenderConfig() const
-    {
-        return _renderConfigs;
-    }
+  const std::optional<NetworkConfig> &GetNetworkConfig() const {
+    return _networkConfigs;
+  }
 
-    const std::vector<std::string> &GetIntroImages() const
-    {
-        return _introImages;
-    }
-    const std::vector<std::string> &GetIntroText() const
-    {
-        return _introText;
-    }
-
-  private:
-    GameConfig _gameConfigs;
-    RenderConfig _renderConfigs;
-
-    std::vector<std::string> _introImages;
-    std::vector<std::string> _introText;
+ private:
+  GameConfig _gameConfigs;
+  RenderConfig _renderConfigs;
+  std::optional<NetworkConfig> _networkConfigs;
 };
 
-} // namespace Resource
+}  // namespace Resource

@@ -79,7 +79,7 @@ constexpr auto MESSAGE_SIZE =
 struct NetworkMessage {
   MessageType Type;
   uint32_t Size;
-  std::array<uint8_t, MESSAGE_SIZE> Data;
+  std::array<uint8_t, MESSAGE_DATA_SIZE> Data;
 };
 
 std::array<uint8_t, MESSAGE_SIZE> Serialize(const NetworkMessage& msg);

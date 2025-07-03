@@ -22,15 +22,6 @@ constexpr auto SCORE_SFX_CHANNEL = 1;
 
 SceneManager* scene;
 
-void RunServer(boost::asio::io_context& io_context) {
-  try {
-    NetworkManager server(io_context, 1330);
-    io_context.run();
-  } catch (std::exception& e) {
-    std::cerr << e.what() << std::endl;
-  }
-}
-
 int main(int argc, char* argv[]) {
   bool running = true;
 
@@ -38,6 +29,7 @@ int main(int argc, char* argv[]) {
   std::unique_ptr<Graphics::GraphicsManager> graphicsManager(nullptr);
   std::unique_ptr<AudioManager> audioManager(nullptr);
   std::unique_ptr<SceneManager> sceneManager(nullptr);
+  std::unique_ptr<NetworkManager> networkManager(nullptr);
   Input::InputManager inputManager;
   quill::Backend::start();
 
@@ -49,6 +41,7 @@ int main(int argc, char* argv[]) {
   }
   const auto& gameConfig = resourceManager->GetGameConfig();
   const auto& renderConfig = resourceManager->GetRenderConfig();
+  const auto& networkConfig = resourceManager->GetNetworkConfig();
 
   try {
     graphicsManager = std::make_unique<Graphics::GraphicsManager>(
@@ -66,6 +59,12 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
+  // Initalize Server
+  if (networkConfig.has_value()) {
+    networkManager = std::make_unique<NetworkManager>(networkConfig->Hostname,
+                                                      networkConfig->Port);
+  }
+
   // Context 0 exists by default, it maps to Intro controls
   std::vector<int> inputContexts(1, 0);
 
@@ -75,17 +74,14 @@ int main(int argc, char* argv[]) {
 
   try {
     sceneManager = std::make_unique<SceneManager>(
-        graphicsManager.get(), audioManager.get(), &inputManager);
+        graphicsManager.get(), audioManager.get(), &inputManager,
+        networkManager.get());
   } catch (std::runtime_error& err) {
     std::cout << err.what();
     return 0;
   }
 
   scene = sceneManager.get();
-
-  // Initalize Server
-  boost::asio::io_context io_context;
-  std::jthread serverThread(RunServer, std::ref(io_context));
 
   while (running) {
     graphicsManager->ClearScreen();
@@ -94,9 +90,6 @@ int main(int argc, char* argv[]) {
     sceneManager->UpdateSceneActors();
     graphicsManager->RefreshScreen();
   }
-
-  io_context.stop();
-  serverThread.join();
 
   return 0;
 }

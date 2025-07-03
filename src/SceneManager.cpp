@@ -15,6 +15,7 @@
 #include "GraphicsManager.h"
 #include "Helper.h"
 #include "InputManager.h"
+#include "NetworkManager.h"
 
 static const std::filesystem::path SCENE_PATH =
     std::filesystem::path{"resources"} / std::filesystem::path{"scenes"};
@@ -124,7 +125,7 @@ struct Caller<ReturnType, 13> {
         tvl.tl.tl.tl.tl.tl.tl.tl.tl.tl.tl.tl.tl.hd);
   }
 };
-}
+}  // namespace detail
 }  // namespace luabridge
 
 constexpr auto PIXELS_PER_METER = 100;
@@ -968,12 +969,14 @@ void SceneManager::LoadTemplateFromConfig(
 
 SceneManager::SceneManager(Graphics::GraphicsManager* graphicsManager,
                            AudioManager* audioManager,
-                           Input::InputManager* inputManager)
+                           Input::InputManager* inputManager,
+                           NetworkManager* networkManager)
     : _currentScene(""),
       _nextScene("basic"),
       _graphicsManager(graphicsManager),
       _audioManager(audioManager),
       _inputManager(inputManager),
+      _networkManager(networkManager),
       _componentCounter(0),
       _actorCounter(0),
       _cameraPos(0.0f, 0.0f),
@@ -1140,10 +1143,10 @@ void SceneManager::UpdateSceneActors() {
     auto& callbacks = subscriptions.at(eventType);
     int i = 0;
     for (auto& [_component, _func] : callbacks) {
-      //if (_component == component && _func == func) {
-      //  callbacks.erase(callbacks.begin() + i);
-      //  break;
-      //}
+      // if (_component == component && _func == func) {
+      //   callbacks.erase(callbacks.begin() + i);
+      //   break;
+      // }
       i++;
     }
     if (callbacks.empty()) {
@@ -1265,6 +1268,7 @@ void SceneManager::InitializeAPI() {
   InitializeSceneAPI();
   InitializePhysicsAPI();
   InitializeEventsAPI();
+  InitializeNetworkAPI();
 }
 void SceneManager::InitializeClassAPI() {
   std::function<void(RigidBody*)> rigidBodyStart = [&](RigidBody* rb) {
@@ -1715,8 +1719,8 @@ void SceneManager::InitializeTextAPI() {
       draw = [&](const std::string& text, int x, int y,
                  const std::string& fontName, unsigned int fontSize, int r,
                  int g, int b, int a) {
-        _graphicsManager->DrawText(fontName, fontSize, text, x, y,
-                                   Graphics::RGBA{r, g, b, a});
+        _graphicsManager->RenderText(fontName, fontSize, text, x, y,
+                                     Graphics::RGBA{r, g, b, a});
       };
   luabridge::getGlobalNamespace(_luaState)
       .beginNamespace("Text")
@@ -1898,5 +1902,51 @@ void SceneManager::InitializeEventsAPI() {
       .addFunction("Publish", publish)
       .addFunction("Subscribe", subscribe)
       .addFunction("Unsubscribe", unsubscribe)
+      .endNamespace();
+}
+
+void SceneManager::InitializeNetworkAPI() {
+  if (!_networkManager) {
+    return;
+  }
+  std::function<void(const std::array<uint8_t, MESSAGE_DATA_SIZE>&)>
+      networkCallback = [&](const std::array<uint8_t, MESSAGE_DATA_SIZE>& msg) {
+        std::lock_guard<std::mutex> lock(_networkLock);
+        _networkMessageQueue.push(std::vector<uint8_t>(msg.begin(), msg.end()));
+      };
+  _networkManager->SetHandlePacketCallback(networkCallback);
+
+  std::function<b2Vec2()> receive = [&]() {
+    std::vector<uint8_t> msg;
+    b2Vec2 pos{};
+    {
+      std::lock_guard<std::mutex> lock(_networkLock);
+      if (_networkMessageQueue.empty()) {
+        return pos;
+      }
+      msg = _networkMessageQueue.front();
+      _networkMessageQueue.pop();
+    }
+    std::cout << "Got message\n";
+    for (auto& v : msg) {
+      std::cout << int(v) << ",";
+    }
+    std::cout << "\n";
+    int x = 0;
+    int y = 0;
+    std::memcpy(&x, msg.data(), sizeof(float));
+    std::memcpy(&y, msg.data() + sizeof(float), sizeof(float));
+    x = NetworkToHost(x);
+    y = NetworkToHost(y);
+    std::cout << "received: " << x << "," << y << std::endl;
+
+    pos.y = y;
+    pos.x = x;
+    return pos;
+  };
+
+  luabridge::getGlobalNamespace(_luaState)
+      .beginNamespace("Network")
+      .addFunction("Receive", receive)
       .endNamespace();
 }

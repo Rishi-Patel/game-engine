@@ -18,8 +18,13 @@ int main(int argc, char* argv[]) {
     boost::asio::connect(socket, endpoints);
     NetworkMessage msg;
     msg.Data.fill(0);
-    msg.Data[0] = 123;
-    msg.Data[1023] = 210;
+    unsigned int x = 1;
+    unsigned int y = 7;
+    x = HostToNetwork(x);
+    y = HostToNetwork(y);
+    std::memcpy(msg.Data.data(), &x, sizeof(unsigned int));
+    std::memcpy(msg.Data.data() + sizeof(unsigned int), &y,
+                sizeof(unsigned int));
     msg.Size = MESSAGE_SIZE;
     msg.Type = MessageType::USER;
 
