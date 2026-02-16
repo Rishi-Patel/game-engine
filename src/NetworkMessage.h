@@ -4,6 +4,8 @@
 #include <array>
 #include <bit>
 #include <concepts>
+#include <cstdint>
+#include <cstring>
 
 /* HostToNetwork: Converts integer from host endian to
  *                network endian
