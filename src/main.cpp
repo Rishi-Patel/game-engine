@@ -61,6 +61,8 @@ int main(int argc, char* argv[]) {
 
   // Initalize Server
   if (networkConfig.has_value()) {
+    std::cout << "Creating network manager with hostname: " << networkConfig->Hostname.value_or("localhost")
+         << " and port: " << networkConfig->Port << std::endl;
     networkManager = std::make_unique<NetworkManager>(networkConfig->Hostname,
                                                       networkConfig->Port);
   }

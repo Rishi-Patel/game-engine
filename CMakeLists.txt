@@ -1,11 +1,12 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required(VERSION 3.21)
 set (CMAKE_CXX_STANDARD 23)
 
-# Required for glew
-find_package(OpenGL REQUIRED)
 
 project ("GameEngine" C CXX)
 set(BUILD_SHARED_LIBS OFF)
+
+# Required for glew
+find_package(OpenGL REQUIRED COMPONENTS OpenGL)
 
 include(FetchContent)
 include(ExternalProject)
@@ -46,12 +47,12 @@ target_link_libraries(game_engine PRIVATE lua)
 target_link_libraries(game_engine PRIVATE LuaBridge)
 target_link_libraries(game_engine PRIVATE glm::glm)
 target_link_libraries(game_engine PRIVATE freetype)
-target_link_libraries(game_engine PRIVATE OpenGL::GL)
-target_link_libraries(game_engine PRIVATE Tracy::TracyClient) 
+target_link_libraries(game_engine PRIVATE OpenGL::OpenGL)
 target_link_libraries(game_engine PRIVATE Boost::asio)
 target_link_libraries(game_engine PRIVATE quill::quill)
 target_link_libraries(game_engine PRIVATE glew_s)
 
+target_link_libraries(game_engine PRIVATE Tracy::TracyClient)
 
 ######### Network Client #########
 

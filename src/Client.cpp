@@ -3,6 +3,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <print>
 
 #include "NetworkMessage.h"
 
@@ -47,7 +48,7 @@ int main(int argc, char* argv[]) {
       for (uint8_t v : recv_buf) {
         std::cout << static_cast<int>(v) << ",";
       }
-      std::println(std::cout);
+      std::println();
 
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }

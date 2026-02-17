@@ -16,14 +16,30 @@ std::array<uint8_t, MESSAGE_SIZE> Serialize(const NetworkMessage& msg) {
 }
 
 NetworkMessage Deserialize(const std::array<uint8_t, MESSAGE_SIZE>& buffer) {
-  NetworkMessage msg;
+  NetworkMessage msg{};
   size_t offset = 0;
 
-  msg.Type = static_cast<MessageType>(buffer[0]);
-  std::memcpy(&msg.Size, buffer.data() + sizeof(msg.Type), sizeof(msg.Size));
+  // Read type
+  msg.Type = static_cast<MessageType>(buffer[offset]);
+  offset += sizeof(uint8_t);
+
+  // Read size
+  std::memcpy(&msg.Size, buffer.data() + offset, sizeof(msg.Size));
   msg.Size = NetworkToHost(msg.Size);
-  std::memcpy(msg.Data.data(),
-              buffer.data() + sizeof(msg.Type) + sizeof(msg.Size),
-              msg.Size - sizeof(msg.Type) + sizeof(msg.Size));
+  offset += sizeof(msg.Size);
+
+  // Validate size
+  if (msg.Size < offset || msg.Size > MESSAGE_SIZE) {
+    throw std::runtime_error("Invalid message size");
+  }
+
+  size_t payloadSize = msg.Size - offset;
+
+  if (payloadSize > MESSAGE_DATA_SIZE) {
+    throw std::runtime_error("Payload too large");
+  }
+
+  std::memcpy(msg.Data.data(), buffer.data() + offset, payloadSize);
+
   return msg;
 }

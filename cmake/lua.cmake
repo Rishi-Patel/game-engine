@@ -6,7 +6,6 @@ file(GLOB lua_src
      "${CMAKE_CURRENT_BINARY_DIR}/../_deps/lua-src/src/*.h"
      "${CMAKE_CURRENT_BINARY_DIR}/../_deps/lua-src/src/*.c"
 )
-message("Rishi ${CMAKE_CURRENT_BINARY_DIR}/../_deps/lua-src/src/")
 list(REMOVE_ITEM lua_src "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua-src/src/luac.c" "${CMAKE_CURRENT_BINARY_DIR}/_deps/lua-src/src/lua.c")
 add_library(lua STATIC ${lua_src})
 

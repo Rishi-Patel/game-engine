@@ -224,7 +224,7 @@ void NetworkManager::HandleSessionMessage(uint32_t sessionId,
       AckHeartbeat(sessionId);
       break;
     case MessageType::USER:
-      HandleUserMessage(msg);
+      // HandleUserMessage(msg);
       break;
     default:
       break;
@@ -244,7 +244,7 @@ void NetworkManager::HandleUserMessage(const NetworkMessage &msg) {
 void NetworkManager::AcceptSessionMessage(std::shared_ptr<Session> session) {
   boost::asio::async_read(
       session->Socket,
-      boost::asio::buffer(&session->RawByteBuffer, MESSAGE_SIZE),
+      boost::asio::buffer(session->RawByteBuffer),
       [this, session](std::error_code ec, std::size_t bytesRecv) {
         session->LastMessage = Deserialize(session->RawByteBuffer);
         LOG_INFO(_logger,
