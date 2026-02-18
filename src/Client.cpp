@@ -18,37 +18,33 @@ int main(int argc, char* argv[]) {
     tcp::socket socket(io_context);
     boost::asio::connect(socket, endpoints);
     NetworkMessage msg;
-    msg.Data.fill(0);
+    msg.Type = MessageType::USER;
     unsigned int x = 1;
     unsigned int y = 7;
     x = HostToNetwork(x);
     y = HostToNetwork(y);
     std::memcpy(msg.Data.data(), &x, sizeof(unsigned int));
+    msg.Size += sizeof(x);
     std::memcpy(msg.Data.data() + sizeof(unsigned int), &y,
-                sizeof(unsigned int));
-    msg.Size = MESSAGE_SIZE;
-    msg.Type = MessageType::USER;
+    sizeof(unsigned int));
+    msg.Size += sizeof(y);
 
     for (int i = 0; i < 100; i++) {
-      std::cout << "Sending message\n";
-      msg.Type = MessageType::USER;
+      std::cout << "Sending message\n" << msg << std::endl;
       auto data = Serialize(msg);
-      int bytesSent = socket.send(boost::asio::buffer(data));
+      int bytesSent = socket.send(boost::asio::buffer(data, MESSAGE_HEADER_SIZE + msg.Size));
       std::cout << "Message sent " << bytesSent << "\n";
 
-      msg.Type = MessageType::HEARTBEAT;
-      std::cout << "Sending heartbeat\n";
-      data = Serialize(msg);
-      bytesSent = socket.send(boost::asio::buffer(data));
+      std::cout << "Sending heartbeat\n" << kHeartbeatMessage << std::endl;
+      data = Serialize(kHeartbeatMessage);
+      bytesSent = socket.send(boost::asio::buffer(data, MESSAGE_HEADER_SIZE + kHeartbeatMessage.Size));
       std::cout << "Heartbeat sent " << bytesSent << "\n";
+      
       std::array<uint8_t, MESSAGE_SIZE> recv_buf{};
       size_t len = socket.receive(boost::asio::buffer(recv_buf));
+
       auto rmsg = Deserialize(recv_buf);
-      std::cout << "Len: " << len << std::endl;
-      for (uint8_t v : recv_buf) {
-        std::cout << static_cast<int>(v) << ",";
-      }
-      std::println();
+      std::cout << "Received message!!\n" << rmsg << std::endl;
 
       std::this_thread::sleep_for(std::chrono::milliseconds(500));
     }

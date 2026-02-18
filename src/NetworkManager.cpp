@@ -17,7 +17,13 @@
 
 static constexpr auto kLoggerName = "NetworkThread";
 
-struct Session {
+class Session : public std::enable_shared_from_this<Session> {
+  public:
+  Session(bool isActive, boost::asio::ip::tcp::socket socket, uint32_t id,
+          boost::asio::steady_timer timer)
+      : IsActive(isActive), Socket(std::move(socket)), Id(id),
+        HeartbeatTimer(std::move(timer)) {}
+        
   bool IsActive;
   boost::asio::ip::tcp::socket Socket;
   uint32_t Id;
@@ -120,6 +126,8 @@ void NetworkManager::RemoveSession(uint32_t sessionId) {
 }
 
 void NetworkManager::AsyncAccept(boost::asio::ip::tcp::acceptor &acceptor) {
+  // Lambda executed when a client connects
+  // Socket where communication with the client will happen
   acceptor.async_accept([this, &acceptor](std::error_code ec,
                                           boost::asio::ip::tcp::socket socket) {
     if (!ec) {
@@ -134,6 +142,9 @@ void NetworkManager::AsyncAccept(boost::asio::ip::tcp::acceptor &acceptor) {
       LOG_INFO(_logger, "New Session created, ID: {}", sessionId);
 
       StartSession(session);
+    }
+    else {
+        LOG_ERROR(_logger, "Error accepting client connection: {}",ec.message());
     }
     AsyncAccept(acceptor);
   });
@@ -205,10 +216,7 @@ void NetworkManager::AckHeartbeat(uint32_t sessionId) {
     it->second->IsActive = true;
   }
   LOG_DEBUG(_logger, "Heartbeat received from session {}", sessionId);
-  NetworkMessage msg;
-  msg.Size = MESSAGE_SIZE;
-  msg.Type = MessageType::HEARTBEAT;
-  msg.Data.fill(0);
+  auto msg = kHeartbeatMessage;
   SendNetworkMessage(sessionId, msg);
 }
 
@@ -224,7 +232,7 @@ void NetworkManager::HandleSessionMessage(uint32_t sessionId,
       AckHeartbeat(sessionId);
       break;
     case MessageType::USER:
-      // HandleUserMessage(msg);
+      HandleUserMessage(msg);
       break;
     default:
       break;
@@ -241,6 +249,7 @@ void NetworkManager::HandleUserMessage(const NetworkMessage &msg) {
   }
 }
 
+// ToDo: Fix this. We want to first read header_size bytes, then read in msg.size bytes into the data buffer
 void NetworkManager::AcceptSessionMessage(std::shared_ptr<Session> session) {
   boost::asio::async_read(
       session->Socket,

@@ -6,6 +6,8 @@
 #include <concepts>
 #include <cstdint>
 #include <cstring>
+#include <string>
+#include <ostream>
 
 /* HostToNetwork: Converts integer from host endian to
  *                network endian
@@ -74,15 +76,42 @@ enum class MessageType : uint8_t {
   USER
 };
 
-constexpr auto MESSAGE_DATA_SIZE = 1024;
-constexpr auto MESSAGE_SIZE =
-    sizeof(MessageType) + sizeof(uint32_t) + MESSAGE_DATA_SIZE;
+constexpr uint32_t MESSAGE_DATA_SIZE = 1024;
+constexpr uint32_t MESSAGE_HEADER_SIZE = sizeof(MessageType) + sizeof(uint32_t);
+constexpr uint32_t MESSAGE_SIZE =
+    MESSAGE_HEADER_SIZE + MESSAGE_DATA_SIZE;
 
 struct NetworkMessage {
   MessageType Type;
   uint32_t Size;
   std::array<uint8_t, MESSAGE_DATA_SIZE> Data;
 };
+
+static constexpr auto kHeartbeatMessage = NetworkMessage{.Type = MessageType::HEARTBEAT, .Size = 0, .Data = {}};
+
+inline std::string ToString(const MessageType& type) {
+  switch (type) {
+    case MessageType::CONNECT:
+      return "CONNECT";
+    case MessageType::DISCONNECT:
+      return "DISCONNECT";
+    case MessageType::HEARTBEAT:
+      return "HEARTBEAT";
+    case MessageType::USER:
+      return "USER";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+inline std::ostream& operator<<(std::ostream& os, const NetworkMessage& msg) {
+  os << "Header: Type=" << ToString(msg.Type) << ", Size=" << msg.Size << "\nData=[";
+  for (size_t i = 0; i < msg.Size; i++) {
+    os << static_cast<int>(msg.Data[i]) << " ";
+  }
+  os << "]";
+  return os;
+}
 
 std::array<uint8_t, MESSAGE_SIZE> Serialize(const NetworkMessage& msg);
 NetworkMessage Deserialize(const std::array<uint8_t, MESSAGE_SIZE>& buffer);
