@@ -35,10 +35,9 @@ namespace detail {
 // As a result of doing so, luabridge can now support additional parameters in
 // lua functions.
 
-template <class ReturnType>
-struct Caller<ReturnType, 10> {
+template <class ReturnType> struct Caller<ReturnType, 10> {
   template <class Fn, class Params>
-  static ReturnType f(Fn& fn, TypeListValues<Params>& tvl) {
+  static ReturnType f(Fn &fn, TypeListValues<Params> &tvl) {
     return fn(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
               tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd,
               tvl.tl.tl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.tl.tl.hd,
@@ -47,7 +46,7 @@ struct Caller<ReturnType, 10> {
   }
 
   template <class T, class MemFn, class Params>
-  static ReturnType f(T* obj, MemFn& fn, TypeListValues<Params>& tvl) {
+  static ReturnType f(T *obj, MemFn &fn, TypeListValues<Params> &tvl) {
     return (obj->*fn)(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
                       tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd,
                       tvl.tl.tl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.tl.tl.hd,
@@ -56,10 +55,9 @@ struct Caller<ReturnType, 10> {
   }
 };
 
-template <class ReturnType>
-struct Caller<ReturnType, 11> {
+template <class ReturnType> struct Caller<ReturnType, 11> {
   template <class Fn, class Params>
-  static ReturnType f(Fn& fn, TypeListValues<Params>& tvl) {
+  static ReturnType f(Fn &fn, TypeListValues<Params> &tvl) {
     return fn(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
               tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd,
               tvl.tl.tl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.tl.tl.hd,
@@ -68,7 +66,7 @@ struct Caller<ReturnType, 11> {
   }
 
   template <class T, class MemFn, class Params>
-  static ReturnType f(T* obj, MemFn& fn, TypeListValues<Params>& tvl) {
+  static ReturnType f(T *obj, MemFn &fn, TypeListValues<Params> &tvl) {
     return (obj->*fn)(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
                       tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd,
                       tvl.tl.tl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.tl.tl.hd,
@@ -78,10 +76,9 @@ struct Caller<ReturnType, 11> {
   }
 };
 
-template <class ReturnType>
-struct Caller<ReturnType, 12> {
+template <class ReturnType> struct Caller<ReturnType, 12> {
   template <class Fn, class Params>
-  static ReturnType f(Fn& fn, TypeListValues<Params>& tvl) {
+  static ReturnType f(Fn &fn, TypeListValues<Params> &tvl) {
     return fn(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
               tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd,
               tvl.tl.tl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.tl.tl.hd,
@@ -91,7 +88,7 @@ struct Caller<ReturnType, 12> {
   }
 
   template <class T, class MemFn, class Params>
-  static ReturnType f(T* obj, MemFn& fn, TypeListValues<Params>& tvl) {
+  static ReturnType f(T *obj, MemFn &fn, TypeListValues<Params> &tvl) {
     return (obj->*fn)(
         tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.hd,
         tvl.tl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.tl.hd,
@@ -101,10 +98,9 @@ struct Caller<ReturnType, 12> {
   }
 };
 
-template <class ReturnType>
-struct Caller<ReturnType, 13> {
+template <class ReturnType> struct Caller<ReturnType, 13> {
   template <class Fn, class Params>
-  static ReturnType f(Fn& fn, TypeListValues<Params>& tvl) {
+  static ReturnType f(Fn &fn, TypeListValues<Params> &tvl) {
     return fn(tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd,
               tvl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.hd,
               tvl.tl.tl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.tl.tl.hd,
@@ -115,7 +111,7 @@ struct Caller<ReturnType, 13> {
   }
 
   template <class T, class MemFn, class Params>
-  static ReturnType f(T* obj, MemFn& fn, TypeListValues<Params>& tvl) {
+  static ReturnType f(T *obj, MemFn &fn, TypeListValues<Params> &tvl) {
     return (obj->*fn)(
         tvl.hd, tvl.tl.hd, tvl.tl.tl.hd, tvl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.hd,
         tvl.tl.tl.tl.tl.tl.hd, tvl.tl.tl.tl.tl.tl.tl.hd,
@@ -125,17 +121,17 @@ struct Caller<ReturnType, 13> {
         tvl.tl.tl.tl.tl.tl.tl.tl.tl.tl.tl.tl.tl.hd);
   }
 };
-}  // namespace detail
-}  // namespace luabridge
+} // namespace detail
+} // namespace luabridge
 
 constexpr auto PIXELS_PER_METER = 100;
 
-RaycastListener* static_raycast_listener = nullptr;
-lua_State* static_lua_state = nullptr;
-b2World* static_physics_world = nullptr;
-Graphics::GraphicsManager* static_graphics_manager = nullptr;
-std::pair<float, float>* static_camera_pos = nullptr;
-float* static_camera_zoom = nullptr;
+RaycastListener *static_raycast_listener = nullptr;
+lua_State *static_lua_state = nullptr;
+b2World *static_physics_world = nullptr;
+Graphics::GraphicsManager *static_graphics_manager = nullptr;
+std::pair<float, float> *static_camera_pos = nullptr;
+float *static_camera_zoom = nullptr;
 
 static std::pair<float, float> StaticConvertCordsToScreen(float x, float y) {
   auto [screenWidth, screenHeight] =
@@ -163,7 +159,7 @@ static luabridge::LuaRef GetSingleRayCastCollision(b2Vec2 pos, b2Vec2 dir,
 
   static_raycast_listener->Reset();
   static_physics_world->RayCast(static_raycast_listener, pos, pos + dir);
-  auto& hitResults = static_raycast_listener->GetAllRayCast();
+  auto &hitResults = static_raycast_listener->GetAllRayCast();
   if (hitResults.empty() == false) {
     ref = luabridge::LuaRef(static_lua_state, *hitResults.begin());
   }
@@ -177,17 +173,17 @@ static luabridge::LuaRef GetAllRayCastCollisions(b2Vec2 pos, b2Vec2 dir,
 
   static_raycast_listener->Reset();
   static_physics_world->RayCast(static_raycast_listener, pos, pos + dir);
-  auto& hitResults = static_raycast_listener->GetAllRayCast();
+  auto &hitResults = static_raycast_listener->GetAllRayCast();
   if (hitResults.empty() == false) {
     int i = 1;
-    for (auto& hitResult : hitResults) {
+    for (auto &hitResult : hitResults) {
       ref[i++] = luabridge::LuaRef(static_lua_state, &hitResult);
     }
   }
   return ref;
 }
 
-static void StaticDrawSprite(const std::string& imageName, float x, float y,
+static void StaticDrawSprite(const std::string &imageName, float x, float y,
                              float rotation, float scaleX, float scaleY,
                              float pivotX, float pivotY, float r, float g,
                              float b, float a, float sortingOrder) {
@@ -210,8 +206,8 @@ static void StaticDrawSprite(const std::string& imageName, float x, float y,
                            {0, sortingOrder}});
 };
 
-static void ReportError(const std::string& actorName,
-                        const luabridge::LuaException& e) {
+static void ReportError(const std::string &actorName,
+                        const luabridge::LuaException &e) {
   std::string error_message = e.what();
   std::replace(error_message.begin(), error_message.end(), '\\', '/');
   std::cout << "\033[31m" << actorName << " : " << error_message << "\033[0m"
@@ -232,7 +228,7 @@ struct ParticleSystem {
   std::string key{""};
   std::string type{""};
   bool enabled{true};
-  Actor* actor{nullptr};
+  Actor *actor{nullptr};
 
   std::string ImageName = "";
   float ScaleMin = 1.0f;
@@ -346,7 +342,7 @@ struct ParticleSystem {
 
     // Remove expired particles
     int i = 0;
-    for (auto& [x, y, vx, vy, rotationSpeed, initalScale, rotation,
+    for (auto &[x, y, vx, vy, rotationSpeed, initalScale, rotation,
                 particleStartFrame, isActive] : Particles) {
       if (!isActive) {
         i++;
@@ -362,7 +358,7 @@ struct ParticleSystem {
       i++;
     }
 
-    for (auto& [x, y, vx, vy, rotationSpeed, initalScale, rotation,
+    for (auto &[x, y, vx, vy, rotationSpeed, initalScale, rotation,
                 particleStartFrame, isActive] : Particles) {
       if (!isActive) {
         continue;
@@ -415,17 +411,17 @@ struct ParticleSystem {
 };
 
 struct Collision {
-  Actor* other{nullptr};
+  Actor *other{nullptr};
   b2Vec2 point{0.0f, 0.0f};
   b2Vec2 relative_velocity{0.0f, 0.0f};
   b2Vec2 normal{0.0f, 0.0f};
 };
 
-void ContactListener::BeginContact(b2Contact* contact) {
-  auto* actorA =
-      reinterpret_cast<Actor*>(contact->GetFixtureA()->GetUserData().pointer);
-  auto* actorB =
-      reinterpret_cast<Actor*>(contact->GetFixtureB()->GetUserData().pointer);
+void ContactListener::BeginContact(b2Contact *contact) {
+  auto *actorA =
+      reinterpret_cast<Actor *>(contact->GetFixtureA()->GetUserData().pointer);
+  auto *actorB =
+      reinterpret_cast<Actor *>(contact->GetFixtureB()->GetUserData().pointer);
   b2WorldManifold worldManifold;
   contact->GetWorldManifold(&worldManifold);
   Collision collision{
@@ -434,8 +430,8 @@ void ContactListener::BeginContact(b2Contact* contact) {
           contact->GetFixtureB()->GetBody()->GetLinearVelocity(),
       worldManifold.normal};
 
-  auto& actorAComponentsToUpdate = actorA->onContactBeginComponents;
-  auto& actorBComponentsToUpdate = actorB->onContactBeginComponents;
+  auto &actorAComponentsToUpdate = actorA->onContactBeginComponents;
+  auto &actorBComponentsToUpdate = actorB->onContactBeginComponents;
   std::string functionName = "OnCollisionEnter";
   bool isTrigger =
       (contact->GetFixtureA()->GetFilterData().categoryBits == 0x0002);
@@ -447,44 +443,44 @@ void ContactListener::BeginContact(b2Contact* contact) {
     collision.normal = b2Vec2(-999.0f, -999.0f);
   }
 
-  for (const auto& componentName : actorAComponentsToUpdate) {
+  for (const auto &componentName : actorAComponentsToUpdate) {
     auto component = actorA->components.at(componentName);
     if (component["enabled"].cast<bool>() == false) {
       continue;
     }
     try {
       component[functionName](component, collision);
-    } catch (const luabridge::LuaException& e) {
+    } catch (const luabridge::LuaException &e) {
       ReportError(actorA->name, e);
     }
   }
 
   collision.other = actorA;
-  for (const auto& componentName : actorBComponentsToUpdate) {
+  for (const auto &componentName : actorBComponentsToUpdate) {
     auto component = actorB->components.at(componentName);
     if (component["enabled"].cast<bool>() == false) {
       continue;
     }
     try {
       component[functionName](component, collision);
-    } catch (const luabridge::LuaException& e) {
+    } catch (const luabridge::LuaException &e) {
       ReportError(actorB->name, e);
     }
   }
 }
-void ContactListener::EndContact(b2Contact* contact) {
-  auto* actorA =
-      reinterpret_cast<Actor*>(contact->GetFixtureA()->GetUserData().pointer);
-  auto* actorB =
-      reinterpret_cast<Actor*>(contact->GetFixtureB()->GetUserData().pointer);
+void ContactListener::EndContact(b2Contact *contact) {
+  auto *actorA =
+      reinterpret_cast<Actor *>(contact->GetFixtureA()->GetUserData().pointer);
+  auto *actorB =
+      reinterpret_cast<Actor *>(contact->GetFixtureB()->GetUserData().pointer);
   Collision collision{
       actorB, b2Vec2(-999.0f, -999.0f),
       contact->GetFixtureA()->GetBody()->GetLinearVelocity() -
           contact->GetFixtureB()->GetBody()->GetLinearVelocity(),
       b2Vec2(-999.0f, -999.0f)};
 
-  auto& actorAComponentsToUpdate = actorA->onContactEndComponents;
-  auto& actorBComponentsToUpdate = actorB->onContactEndComponents;
+  auto &actorAComponentsToUpdate = actorA->onContactEndComponents;
+  auto &actorBComponentsToUpdate = actorB->onContactEndComponents;
   std::string functionName = "OnCollisionExit";
   bool isTrigger =
       (contact->GetFixtureA()->GetFilterData().categoryBits == 0x0002);
@@ -494,39 +490,39 @@ void ContactListener::EndContact(b2Contact* contact) {
     functionName = "OnTriggerExit";
   }
 
-  for (const auto& componentName : actorAComponentsToUpdate) {
+  for (const auto &componentName : actorAComponentsToUpdate) {
     auto component = actorA->components.at(componentName);
     if (component["enabled"].cast<bool>() == false) {
       continue;
     }
     try {
       component[functionName](component, collision);
-    } catch (const luabridge::LuaException& e) {
+    } catch (const luabridge::LuaException &e) {
       ReportError(actorA->name, e);
     }
   }
 
   collision.other = actorA;
-  for (const auto& componentName : actorBComponentsToUpdate) {
+  for (const auto &componentName : actorBComponentsToUpdate) {
     auto component = actorB->components.at(componentName);
     if (component["enabled"].cast<bool>() == false) {
       continue;
     }
     try {
       component[functionName](component, collision);
-    } catch (const luabridge::LuaException& e) {
+    } catch (const luabridge::LuaException &e) {
       ReportError(actorB->name, e);
     }
   }
 }
 
-float RaycastListener::ReportFixture(b2Fixture* fixture, const b2Vec2& point,
-                                     const b2Vec2& normal, float fraction) {
-  if (reinterpret_cast<Actor*>(fixture->GetUserData().pointer) == nullptr) {
+float RaycastListener::ReportFixture(b2Fixture *fixture, const b2Vec2 &point,
+                                     const b2Vec2 &normal, float fraction) {
+  if (reinterpret_cast<Actor *>(fixture->GetUserData().pointer) == nullptr) {
     return -1;
   }
   HitResult hitResult{};
-  hitResult.actor = reinterpret_cast<Actor*>(fixture->GetUserData().pointer);
+  hitResult.actor = reinterpret_cast<Actor *>(fixture->GetUserData().pointer);
   hitResult.is_trigger = (fixture->GetFilterData().categoryBits == 0x0002);
   hitResult.normal = normal;
   hitResult.point = point;
@@ -539,7 +535,7 @@ struct RigidBody {
   std::string key{""};
   std::string type{""};
   bool enabled{true};
-  Actor* actor{nullptr};
+  Actor *actor{nullptr};
 
   float x{0.0f};
   float y{0.0f};
@@ -564,9 +560,9 @@ struct RigidBody {
   float trigger_height{1.0f};
   float trigger_radius{1.0f};
 
-  b2Body* body{nullptr};
+  b2Body *body{nullptr};
 
-  void OnStart(b2World& world) {
+  void OnStart(b2World &world) {
     b2BodyDef def;
     if (body_type == "dynamic") {
       def.type = b2_dynamicBody;
@@ -640,13 +636,13 @@ struct RigidBody {
   }
 };
 
-luabridge::LuaRef SceneManager::CreateActor(const std::string& actorTemplate) {
-  auto* actor = &actors[_actorCounter];
+luabridge::LuaRef SceneManager::CreateActor(const std::string &actorTemplate) {
+  auto *actor = &actors[_actorCounter];
   actor->id = _actorCounter++;
-  auto* templateActor = GetTemplateActor(actorTemplate);
+  auto *templateActor = GetTemplateActor(actorTemplate);
   LoadActorFromTemplate(*actor, *templateActor);
   _actorsByName[actor->name].emplace(actor->id);
-  for (auto& [componentName, component] : actor->components) {
+  for (auto &[componentName, component] : actor->components) {
     newComponents.emplace(actor->id, component);
   }
   actorChanges.emplace(actor->id, true);
@@ -654,14 +650,14 @@ luabridge::LuaRef SceneManager::CreateActor(const std::string& actorTemplate) {
   return luabridge::LuaRef(_luaState, actor);
 }
 
-luabridge::LuaRef SceneManager::GetComponent(Actor* actor,
-                                             const std::string& templateType) {
+luabridge::LuaRef SceneManager::GetComponent(Actor *actor,
+                                             const std::string &templateType) {
   auto component = luabridge::LuaRef(_luaState);
   if (actor->_componentKeysByTemplateType.find(templateType) ==
       actor->_componentKeysByTemplateType.end()) {
     return component;
   }
-  for (const auto& componentName :
+  for (const auto &componentName :
        actor->_componentKeysByTemplateType.at(templateType)) {
     if (actor->pendingDeletion.count(componentName) == 0) {
       component = actor->components.at(componentName);
@@ -671,8 +667,8 @@ luabridge::LuaRef SceneManager::GetComponent(Actor* actor,
   return component;
 };
 
-static std::optional<std::string> obtainWordAfterPhrase(
-    const std::string& input, const std::string& phrase) {
+static std::optional<std::string>
+obtainWordAfterPhrase(const std::string &input, const std::string &phrase) {
   auto pos = input.find(phrase);
 
   if (pos == std::string::npos) {
@@ -695,9 +691,9 @@ static std::optional<std::string> obtainWordAfterPhrase(
   return input.substr(pos, endPos - pos);
 }
 
-static void ReadJsonFile(const std::string& path,
-                         rapidjson::Document& out_document) {
-  FILE* file_pointer = nullptr;
+static void ReadJsonFile(const std::string &path,
+                         rapidjson::Document &out_document) {
+  FILE *file_pointer = nullptr;
 #ifdef _WIN32
   fopen_s(&file_pointer, path.c_str(), "rb");
 #else
@@ -714,36 +710,36 @@ static void ReadJsonFile(const std::string& path,
   }
 }
 
-static void AddComponentProperty(luabridge::LuaRef& component,
-                                 const std::string& propertyName,
-                                 const rapidjson::Value& value) {
+static void AddComponentProperty(luabridge::LuaRef &component,
+                                 const std::string &propertyName,
+                                 const rapidjson::Value &value) {
   switch (value.GetType()) {
-    case rapidjson::Type::kFalseType:
-    case rapidjson::Type::kTrueType:
-      component[propertyName] = value.GetBool();
-      break;
-    case rapidjson::Type::kNumberType: {
-      if (value.IsInt()) {
-        component[propertyName] = value.GetInt();
-      } else {
-        component[propertyName] = value.GetFloat();
-      }
-    } break;
-    case rapidjson::Type::kStringType:
-      component[propertyName] = value.GetString();
-      break;
-      // Unimplemented
-    case rapidjson::Type::kNullType:
-    case rapidjson::Type::kArrayType:
-    case rapidjson::Type::kObjectType:
-      std::cout << "Unimplemented component property type: " << value.GetType()
-                << std::endl;
-      exit(0);
+  case rapidjson::Type::kFalseType:
+  case rapidjson::Type::kTrueType:
+    component[propertyName] = value.GetBool();
+    break;
+  case rapidjson::Type::kNumberType: {
+    if (value.IsInt()) {
+      component[propertyName] = value.GetInt();
+    } else {
+      component[propertyName] = value.GetFloat();
+    }
+  } break;
+  case rapidjson::Type::kStringType:
+    component[propertyName] = value.GetString();
+    break;
+    // Unimplemented
+  case rapidjson::Type::kNullType:
+  case rapidjson::Type::kArrayType:
+  case rapidjson::Type::kObjectType:
+    std::cout << "Unimplemented component property type: " << value.GetType()
+              << std::endl;
+    exit(0);
   }
 }
 
-void SceneManager::AttachComponentToActor(Actor& actor,
-                                          luabridge::LuaRef& component) {
+void SceneManager::AttachComponentToActor(Actor &actor,
+                                          luabridge::LuaRef &component) {
   std::string key = component["key"].cast<std::string>();
   auto [itr, _] = actor.components.emplace(key, component);
   actor._componentKeysByTemplateType[component["type"]].emplace(key);
@@ -784,9 +780,9 @@ void SceneManager::AttachComponentToActor(Actor& actor,
   }
 }
 
-void SceneManager::DetachComponentFromActor(Actor& actor,
-                                            const std::string& componentName) {
-  auto& component = actor.components.at(componentName);
+void SceneManager::DetachComponentFromActor(Actor &actor,
+                                            const std::string &componentName) {
+  auto &component = actor.components.at(componentName);
   std::string componentType = component["type"];
   actor.pendingDeletion.erase(componentName);
   actor.onStartComponents.erase(componentName);
@@ -799,15 +795,15 @@ void SceneManager::DetachComponentFromActor(Actor& actor,
   if (component["OnDestroy"].isFunction()) {
     try {
       component["OnDestroy"](component);
-    } catch (const luabridge::LuaException& e) {
+    } catch (const luabridge::LuaException &e) {
       ReportError(actor.name, e);
     }
   }
   if (componentType == "Rigidbody") {
-    _physicsWorld->DestroyBody(component.cast<RigidBody*>()->body);
-    delete component.cast<RigidBody*>();
+    _physicsWorld->DestroyBody(component.cast<RigidBody *>()->body);
+    delete component.cast<RigidBody *>();
   } else if (componentType == "ParticleSystem") {
-    delete component.cast<ParticleSystem*>();
+    delete component.cast<ParticleSystem *>();
   }
   actor.onDestroyComponents.erase(componentName);
   actor.components.erase(componentName);
@@ -817,13 +813,13 @@ void SceneManager::DetachComponentFromActor(Actor& actor,
   }
 }
 
-void SceneManager::Log(const std::string& message) {
+void SceneManager::Log(const std::string &message) {
   std::cout << message << std::endl;
 }
 
 luabridge::LuaRef SceneManager::CreateComponentInstance(
-    const std::string& componentInstanceName,
-    const luabridge::LuaRef& templateComponent) {
+    const std::string &componentInstanceName,
+    const luabridge::LuaRef &templateComponent) {
   luabridge::LuaRef componentInstance = luabridge::newTable(_luaState);
   EstablishInheritance(componentInstance, templateComponent);
   componentInstance["key"] = componentInstanceName;
@@ -831,13 +827,13 @@ luabridge::LuaRef SceneManager::CreateComponentInstance(
 }
 
 void SceneManager::EstablishInheritance(
-    luabridge::LuaRef& instance, const luabridge::LuaRef& template_component) {
+    luabridge::LuaRef &instance, const luabridge::LuaRef &template_component) {
   if (template_component["type"].cast<std::string>() == "Rigidbody") {
-    auto* parent = template_component.cast<RigidBody*>();
+    auto *parent = template_component.cast<RigidBody *>();
     instance = luabridge::LuaRef(_luaState, new RigidBody(*parent));
   } else if (template_component["type"].cast<std::string>() ==
              "ParticleSystem") {
-    auto* parent = template_component.cast<ParticleSystem*>();
+    auto *parent = template_component.cast<ParticleSystem *>();
     instance = luabridge::LuaRef(_luaState, new ParticleSystem(*parent));
   } else {
     luabridge::LuaRef new_metatable = luabridge::newTable(_luaState);
@@ -850,7 +846,7 @@ void SceneManager::EstablishInheritance(
   }
 }
 
-luabridge::LuaRef SceneManager::RunFile(const std::filesystem::path& filename) {
+luabridge::LuaRef SceneManager::RunFile(const std::filesystem::path &filename) {
   if (luaL_dofile(_luaState, filename.string().c_str()) != LUA_OK) {
     std::cout << "problem with lua file " << filename.stem().string().c_str();
     exit(0);
@@ -864,8 +860,8 @@ void SceneManager::InitializePhysics() {
   static_physics_world = _physicsWorld.get();
 }
 
-void SceneManager::SetParameter(Actor& actor, const std::string& configName,
-                                const rapidjson::Value& value) {
+void SceneManager::SetParameter(Actor &actor, const std::string &configName,
+                                const rapidjson::Value &value) {
   if (configName == "name") {
     actor.name = value.GetString();
   }
@@ -890,25 +886,25 @@ void SceneManager::SetParameter(Actor& actor, const std::string& configName,
   }
 }
 
-luabridge::LuaRef SceneManager::LoadComponentTemplate(
-    const std::string& componentName) {
+luabridge::LuaRef
+SceneManager::LoadComponentTemplate(const std::string &componentName) {
   if (_componentTemplates.find(componentName) != _componentTemplates.end()) {
     return _componentTemplates.at(componentName);
   }
 
   if (componentName == "Rigidbody") {
     InitializePhysics();
-    auto* rigidBody = new RigidBody();
+    auto *rigidBody = new RigidBody();
     auto [itr, _] = _componentTemplates.emplace(
         componentName, luabridge::LuaRef(_luaState, rigidBody));
     itr->second["type"] = componentName;
   } else if (componentName == "ParticleSystem") {
-    auto* particleSystem = new ParticleSystem();
+    auto *particleSystem = new ParticleSystem();
     auto [itr, _] = _componentTemplates.emplace(
         componentName, luabridge::LuaRef(_luaState, particleSystem));
     itr->second["type"] = componentName;
   } else {
-    const auto& componentPath =
+    const auto &componentPath =
         COMPONENT_DIR / (componentName + std::string(".lua"));
     if (!std::filesystem::exists(componentPath)) {
       std::cout << "error: failed to locate component " + componentName;
@@ -923,9 +919,9 @@ luabridge::LuaRef SceneManager::LoadComponentTemplate(
   return _componentTemplates.at(componentName);
 }
 
-void SceneManager::LoadActorFromTemplate(Actor& actor, Actor& templateActor) {
+void SceneManager::LoadActorFromTemplate(Actor &actor, Actor &templateActor) {
   actor.name = templateActor.name;
-  for (auto& [componentName, templateActorComponent] :
+  for (auto &[componentName, templateActorComponent] :
        templateActor.components) {
     auto actorComponent =
         CreateComponentInstance(componentName, templateActorComponent);
@@ -933,7 +929,7 @@ void SceneManager::LoadActorFromTemplate(Actor& actor, Actor& templateActor) {
   }
 }
 
-Actor* SceneManager::GetTemplateActor(const std::string& templateActorName) {
+Actor *SceneManager::GetTemplateActor(const std::string &templateActorName) {
   if (templateActors.find(templateActorName) == templateActors.end()) {
     auto templatePath = TEMPLATE_PATH / (templateActorName + ".template");
     if (std::filesystem::exists(templatePath) == false) {
@@ -947,8 +943,8 @@ Actor* SceneManager::GetTemplateActor(const std::string& templateActorName) {
   return &templateActors[templateActorName];
 }
 
-void SceneManager::LoadActorFromConfig(Actor& actor,
-                                       const rapidjson::Value& actorConfig) {
+void SceneManager::LoadActorFromConfig(Actor &actor,
+                                       const rapidjson::Value &actorConfig) {
   std::string configName{};
   for (auto itr = actorConfig.MemberBegin(); itr != actorConfig.MemberEnd();
        itr++) {
@@ -958,7 +954,7 @@ void SceneManager::LoadActorFromConfig(Actor& actor,
 }
 
 void SceneManager::LoadTemplateFromConfig(
-    Actor& actor, const rapidjson::Document& templateConfig) {
+    Actor &actor, const rapidjson::Document &templateConfig) {
   std::string configName{};
   for (auto itr = templateConfig.MemberBegin();
        itr != templateConfig.MemberEnd(); itr++) {
@@ -967,21 +963,14 @@ void SceneManager::LoadTemplateFromConfig(
   }
 }
 
-SceneManager::SceneManager(Graphics::GraphicsManager* graphicsManager,
-                           AudioManager* audioManager,
-                           Input::InputManager* inputManager,
-                           NetworkManager* networkManager)
-    : _currentScene(""),
-      _nextScene("basic"),
-      _graphicsManager(graphicsManager),
-      _audioManager(audioManager),
-      _inputManager(inputManager),
-      _networkManager(networkManager),
-      _componentCounter(0),
-      _actorCounter(0),
-      _cameraPos(0.0f, 0.0f),
-      _cameraZoom(1.0f),
-      _frameNumber(0) {
+SceneManager::SceneManager(Graphics::GraphicsManager *graphicsManager,
+                           AudioManager *audioManager,
+                           Input::InputManager *inputManager,
+                           NetworkManager *networkManager)
+    : _currentScene(""), _nextScene("basic"), _graphicsManager(graphicsManager),
+      _audioManager(audioManager), _inputManager(inputManager),
+      _networkManager(networkManager), _componentCounter(0), _actorCounter(0),
+      _cameraPos(0.0f, 0.0f), _cameraZoom(1.0f), _frameNumber(0) {
   InitializeAPI();
   static_raycast_listener = &_raycastListener;
   static_lua_state = _luaState;
@@ -990,20 +979,20 @@ SceneManager::SceneManager(Graphics::GraphicsManager* graphicsManager,
   static_camera_zoom = &_cameraZoom;
 }
 
-bool SceneManager::IsOnScreen(Actor& actor, const glm::ivec4& screenCoords) {
+bool SceneManager::IsOnScreen(Actor &actor, const glm::ivec4 &screenCoords) {
   return true;
 }
 
 void SceneManager::RunOnUpdate() {
-  for (auto& [_, actor] : onUpdateActors) {
-    for (auto& [_, itr] : actor->onUpdateComponents) {
+  for (auto &[_, actor] : onUpdateActors) {
+    for (auto &[_, itr] : actor->onUpdateComponents) {
       auto component = itr->second;
       if (component["enabled"].cast<bool>() == false) {
         continue;
       }
       try {
         component["OnUpdate"](component);
-      } catch (const luabridge::LuaException& e) {
+      } catch (const luabridge::LuaException &e) {
         ReportError(actor->name, e);
       }
     }
@@ -1025,30 +1014,30 @@ void SceneManager::HandleActorChanges() {
       if (actors.find(actorId) == actors.end()) {
         continue;
       }
-      for (auto& componentName : actors[actorId].onDestroyComponents) {
+      for (auto &componentName : actors[actorId].onDestroyComponents) {
         auto component = actors[actorId].components.at(componentName);
         try {
           component["OnDestroy"](component);
-        } catch (const luabridge::LuaException& e) {
+        } catch (const luabridge::LuaException &e) {
           ReportError(actors[actorId].name, e);
         }
       }
       if (actors[actorId]._componentKeysByTemplateType.find("Rigidbody") !=
           actors[actorId]._componentKeysByTemplateType.end()) {
-        for (auto& componentName :
+        for (auto &componentName :
              actors[actorId]._componentKeysByTemplateType.at("Rigidbody")) {
           auto component = actors[actorId].components.at(componentName);
-          _physicsWorld->DestroyBody(component.cast<RigidBody*>()->body);
-          delete component.cast<RigidBody*>();
+          _physicsWorld->DestroyBody(component.cast<RigidBody *>()->body);
+          delete component.cast<RigidBody *>();
         }
       }
       if (actors[actorId]._componentKeysByTemplateType.find("ParticleSystem") !=
           actors[actorId]._componentKeysByTemplateType.end()) {
-        for (auto& componentName :
+        for (auto &componentName :
              actors[actorId]._componentKeysByTemplateType.at(
                  "ParticleSystem")) {
           auto component = actors[actorId].components.at(componentName);
-          delete component.cast<ParticleSystem*>();
+          delete component.cast<ParticleSystem *>();
         }
       }
 
@@ -1063,15 +1052,15 @@ void SceneManager::HandleActorChanges() {
 
 void SceneManager::RunOnLateUpdate() {
   for (auto actorId : onLateUpdateActors) {
-    auto& actor = actors[actorId];
-    for (auto& componentName : actor.onLateUpdateComponents) {
+    auto &actor = actors[actorId];
+    for (auto &componentName : actor.onLateUpdateComponents) {
       auto component = actor.components.at(componentName);
       if (component["enabled"].cast<bool>() == false) {
         continue;
       }
       try {
         component["OnLateUpdate"](component);
-      } catch (const luabridge::LuaException& e) {
+      } catch (const luabridge::LuaException &e) {
         ReportError(actor.name, e);
       }
     }
@@ -1086,7 +1075,7 @@ void SceneManager::AddComponents() {
     if (actors.find(actorId) == actors.end()) {
       continue;
     }
-    auto& actor = actors[actorId];
+    auto &actor = actors[actorId];
     if (component["actor"].isNil()) {
       AttachComponentToActor(actor, component);
       if (actor.onUpdateComponents.empty() == false &&
@@ -1104,7 +1093,7 @@ void SceneManager::AddComponents() {
     }
     try {
       component["OnStart"](component);
-    } catch (const luabridge::LuaException& e) {
+    } catch (const luabridge::LuaException &e) {
       ReportError(actor.name, e);
     }
   }
@@ -1140,9 +1129,9 @@ void SceneManager::UpdateSceneActors() {
   while (removeSubscriptions.empty() == false) {
     auto [eventType, component, func] = removeSubscriptions.front();
     removeSubscriptions.pop();
-    auto& callbacks = subscriptions.at(eventType);
+    auto &callbacks = subscriptions.at(eventType);
     int i = 0;
-    for (auto& [_component, _func] : callbacks) {
+    for (auto &[_component, _func] : callbacks) {
       // if (_component == component && _func == func) {
       //   callbacks.erase(callbacks.begin() + i);
       //   break;
@@ -1160,7 +1149,7 @@ void SceneManager::UpdateSceneActors() {
   _frameNumber++;
 }
 
-void SceneManager::SetScene(const std::string& sceneName) {
+void SceneManager::SetScene(const std::string &sceneName) {
   auto p = SCENE_PATH / sceneName;
   p += std::filesystem::path(".scene");
   if (std::filesystem::exists(p) == false) {
@@ -1171,7 +1160,7 @@ void SceneManager::SetScene(const std::string& sceneName) {
   rapidjson::Document sceneConfig;
   ReadJsonFile(p.string(), sceneConfig);
 
-  const rapidjson::Value& actorList = sceneConfig["actors"];
+  const rapidjson::Value &actorList = sceneConfig["actors"];
 
   if (_currentScene.empty()) {
     actors = std::unordered_map<int, Actor>();
@@ -1181,29 +1170,29 @@ void SceneManager::SetScene(const std::string& sceneName) {
       if (itr->second.dontDestroy) {
         itr++;
       } else {
-        for (auto& componentName : itr->second.onDestroyComponents) {
+        for (auto &componentName : itr->second.onDestroyComponents) {
           auto component = itr->second.components.at(componentName);
           try {
             component["OnDestroy"](component);
-          } catch (const luabridge::LuaException& e) {
+          } catch (const luabridge::LuaException &e) {
             ReportError(itr->second.name, e);
           }
         }
         if (itr->second._componentKeysByTemplateType.find("Rigidbody") !=
             itr->second._componentKeysByTemplateType.end()) {
-          for (auto& componentName :
+          for (auto &componentName :
                itr->second._componentKeysByTemplateType.at("Rigidbody")) {
             auto component = itr->second.components.at(componentName);
-            _physicsWorld->DestroyBody(component.cast<RigidBody*>()->body);
-            delete component.cast<RigidBody*>();
+            _physicsWorld->DestroyBody(component.cast<RigidBody *>()->body);
+            delete component.cast<RigidBody *>();
           }
         }
         if (itr->second._componentKeysByTemplateType.find("ParticleSystem") !=
             itr->second._componentKeysByTemplateType.end()) {
-          for (auto& componentName :
+          for (auto &componentName :
                itr->second._componentKeysByTemplateType.at("ParticleSystem")) {
             auto component = itr->second.components.at(componentName);
-            delete component.cast<ParticleSystem*>();
+            delete component.cast<ParticleSystem *>();
           }
         }
 
@@ -1221,18 +1210,18 @@ void SceneManager::SetScene(const std::string& sceneName) {
   }
   _currentScene = sceneName;
 
-  for (auto& actorConfig : actorList.GetArray()) {
-    auto& actor = actors[_actorCounter];
+  for (auto &actorConfig : actorList.GetArray()) {
+    auto &actor = actors[_actorCounter];
     actor.id = _actorCounter++;
 
     if (actorConfig.HasMember("template")) {
       std::string templateActorName = actorConfig["template"].GetString();
-      auto* templateActor = GetTemplateActor(templateActorName);
+      auto *templateActor = GetTemplateActor(templateActorName);
       LoadActorFromTemplate(actor, *templateActor);
     }
 
     LoadActorFromConfig(actor, actorConfig);
-    for (auto& [componentName, component] : actor.components) {
+    for (auto &[componentName, component] : actor.components) {
       newComponents.emplace(actor.id, component);
     }
     _actorsByName[actor.name].emplace(actor.id);
@@ -1271,7 +1260,7 @@ void SceneManager::InitializeAPI() {
   InitializeNetworkAPI();
 }
 void SceneManager::InitializeClassAPI() {
-  std::function<void(RigidBody*)> rigidBodyStart = [&](RigidBody* rb) {
+  std::function<void(RigidBody *)> rigidBodyStart = [&](RigidBody *rb) {
     rb->OnStart(*_physicsWorld.get());
   };
 
@@ -1289,22 +1278,22 @@ void SceneManager::InitializeClassAPI() {
       .addFunction("Length", &b2Vec2::Length)
       .addFunction(
           "__add",
-          +[](b2Vec2* lhs, const b2Vec2& rhs) {
+          +[](b2Vec2 *lhs, const b2Vec2 &rhs) {
             return b2Vec2(lhs->x + rhs.x, lhs->y + rhs.y);
           })
       .addFunction(
           "__sub",
-          +[](b2Vec2* lhs, const b2Vec2& rhs) {
+          +[](b2Vec2 *lhs, const b2Vec2 &rhs) {
             return b2Vec2(lhs->x - rhs.x, lhs->y - rhs.y);
           })
       .addFunction(
           "__mul",
-          +[](b2Vec2* lhs, const float multiplier) {
+          +[](b2Vec2 *lhs, const float multiplier) {
             return b2Vec2(lhs->x * multiplier, lhs->y * multiplier);
           })
       .addStaticFunction("Distance", &b2Distance)
       .addStaticFunction(
-          "Dot", static_cast<float (*)(const b2Vec2&, const b2Vec2&)>(&b2Dot))
+          "Dot", static_cast<float (*)(const b2Vec2 &, const b2Vec2 &)>(&b2Dot))
       .endClass()
 
       .beginClass<ParticleSystem>("ParticleSystem")
@@ -1396,7 +1385,7 @@ void SceneManager::InitializeClassAPI() {
 
       .addFunction(
           "GetPosition",
-          +[](RigidBody* rb) {
+          +[](RigidBody *rb) {
             if (rb->body == nullptr) {
               return b2Vec2{rb->x, rb->y};
             }
@@ -1404,7 +1393,7 @@ void SceneManager::InitializeClassAPI() {
           })
       .addFunction(
           "GetRotation",
-          +[](RigidBody* rb) {
+          +[](RigidBody *rb) {
             if (rb->body == nullptr) {
               return rb->rotation;
             }
@@ -1412,15 +1401,15 @@ void SceneManager::InitializeClassAPI() {
           })
       .addFunction(
           "GetVelocity",
-          +[](RigidBody* rb) { return rb->body->GetLinearVelocity(); })
+          +[](RigidBody *rb) { return rb->body->GetLinearVelocity(); })
       .addFunction(
           "GetAngularVelocity",
-          +[](RigidBody* rb) {
+          +[](RigidBody *rb) {
             return ConvertRadainsToDegrees(rb->body->GetAngularVelocity());
           })
       .addFunction(
           "GetGravityScale",
-          +[](RigidBody* rb) {
+          +[](RigidBody *rb) {
             if (rb->body == nullptr) {
               return rb->gravity_scale;
             }
@@ -1428,7 +1417,7 @@ void SceneManager::InitializeClassAPI() {
           })
       .addFunction(
           "GetUpDirection",
-          +[](RigidBody* rb) {
+          +[](RigidBody *rb) {
             float radAngle = -rb->body->GetAngle() + (b2_pi / 2.0f);
             auto res = b2Vec2(glm::cos(radAngle), -glm::sin(radAngle));
             res.Normalize();
@@ -1436,7 +1425,7 @@ void SceneManager::InitializeClassAPI() {
           })
       .addFunction(
           "GetRightDirection",
-          +[](RigidBody* rb) {
+          +[](RigidBody *rb) {
             float radAngle = -rb->body->GetAngle();
             return b2Vec2(glm::cos(radAngle), -glm::sin(radAngle));
           })
@@ -1444,17 +1433,17 @@ void SceneManager::InitializeClassAPI() {
       .addFunction("OnStart", rigidBodyStart)
       .addFunction(
           "AddForce",
-          +[](RigidBody* rb, b2Vec2& force) {
+          +[](RigidBody *rb, b2Vec2 &force) {
             rb->body->ApplyForceToCenter(force, true);
           })
       .addFunction(
           "SetVelocity",
-          +[](RigidBody* rb, b2Vec2& velocity) {
+          +[](RigidBody *rb, b2Vec2 &velocity) {
             rb->body->SetLinearVelocity(velocity);
           })
       .addFunction(
           "SetPosition",
-          +[](RigidBody* rb, b2Vec2& position) {
+          +[](RigidBody *rb, b2Vec2 &position) {
             if (rb->body == nullptr) {
               rb->x = position.x;
               rb->y = position.y;
@@ -1464,7 +1453,7 @@ void SceneManager::InitializeClassAPI() {
           })
       .addFunction(
           "SetRotation",
-          +[](RigidBody* rb, float degClockwise) {
+          +[](RigidBody *rb, float degClockwise) {
             if (rb->body == nullptr) {
               rb->rotation = degClockwise;
             } else {
@@ -1474,12 +1463,12 @@ void SceneManager::InitializeClassAPI() {
           })
       .addFunction(
           "SetAngularVelocity",
-          +[](RigidBody* rb, float degClockwise) {
+          +[](RigidBody *rb, float degClockwise) {
             rb->body->SetAngularVelocity(ConvertDegreesToRadians(degClockwise));
           })
       .addFunction(
           "SetGravityScale",
-          +[](RigidBody* rb, float gravityScale) {
+          +[](RigidBody *rb, float gravityScale) {
             if (rb->body == nullptr) {
               rb->gravity_scale = gravityScale;
             } else {
@@ -1488,15 +1477,15 @@ void SceneManager::InitializeClassAPI() {
           })
       .addFunction(
           "SetUpDirection",
-          +[](RigidBody* rb, b2Vec2& direction) {
+          +[](RigidBody *rb, b2Vec2 &direction) {
             direction.Normalize();
-            rb->body->SetTransform(
-                rb->body->GetPosition(),
-                -glm::atan(-direction.y, direction.x) + (b2_pi / 2.0f));
+            rb->body->SetTransform(rb->body->GetPosition(),
+                                   -glm::atan(-direction.y, direction.x) +
+                                       (b2_pi / 2.0f));
           })
       .addFunction(
           "SetRightDirection",
-          +[](RigidBody* rb, b2Vec2& direction) {
+          +[](RigidBody *rb, b2Vec2 &direction) {
             direction.Normalize();
             rb->body->SetTransform(rb->body->GetPosition(),
                                    -glm::atan(-direction.y, direction.x));
@@ -1504,30 +1493,30 @@ void SceneManager::InitializeClassAPI() {
       .endClass();
 }
 void SceneManager::InitializeDebugAPI() {
-  std::function<void(const std::string&)> log =
-      [&](const std::string& message) { Log(message); };
+  std::function<void(const std::string &)> log =
+      [&](const std::string &message) { Log(message); };
   luabridge::getGlobalNamespace(_luaState)
       .beginNamespace("Debug")
       .addFunction("Log", log)
       .endNamespace();
 }
 void SceneManager::InitializeActorClassAPI() {
-  std::function<luabridge::LuaRef(Actor*, const std::string&)>
-      getComponentByKey = [&](Actor* actor, const std::string& key) {
+  std::function<luabridge::LuaRef(Actor *, const std::string &)>
+      getComponentByKey = [&](Actor *actor, const std::string &key) {
         if (actor->components.find(key) == actor->components.end() ||
             actor->pendingDeletion.count(key) > 0) {
           return luabridge::LuaRef(_luaState);
         }
         return actor->components.at(key);
       };
-  std::function<luabridge::LuaRef(Actor*, const std::string&)> getComponent =
-      [&](Actor* actor, const std::string& templateType) {
+  std::function<luabridge::LuaRef(Actor *, const std::string &)> getComponent =
+      [&](Actor *actor, const std::string &templateType) {
         auto component = luabridge::LuaRef(_luaState);
         if (actor->_componentKeysByTemplateType.find(templateType) ==
             actor->_componentKeysByTemplateType.end()) {
           return component;
         }
-        for (const auto& componentName :
+        for (const auto &componentName :
              actor->_componentKeysByTemplateType.at(templateType)) {
           if (actor->pendingDeletion.count(componentName) == 0) {
             component = actor->components.at(componentName);
@@ -1536,15 +1525,15 @@ void SceneManager::InitializeActorClassAPI() {
         }
         return component;
       };
-  std::function<luabridge::LuaRef(Actor*, const std::string&)> getComponents =
-      [&](Actor* actor, const std::string& templateType) {
+  std::function<luabridge::LuaRef(Actor *, const std::string &)> getComponents =
+      [&](Actor *actor, const std::string &templateType) {
         auto ref = luabridge::newTable(_luaState);
         if (actor->_componentKeysByTemplateType.find(templateType) ==
             actor->_componentKeysByTemplateType.end()) {
           return ref;
         }
         int i = 1;
-        for (const auto& componentName :
+        for (const auto &componentName :
              actor->_componentKeysByTemplateType.at(templateType)) {
           if (actor->pendingDeletion.count(componentName) == 0) {
             ref[i++] = actor->components.at(componentName);
@@ -1552,8 +1541,8 @@ void SceneManager::InitializeActorClassAPI() {
         }
         return ref;
       };
-  std::function<luabridge::LuaRef(Actor*, const std::string&)> createComponent =
-      [&](Actor* actor, const std::string& templateType) {
+  std::function<luabridge::LuaRef(Actor *, const std::string &)>
+      createComponent = [&](Actor *actor, const std::string &templateType) {
         auto templateComponent = LoadComponentTemplate(templateType);
         std::string componentName = "r" + std::to_string(_componentCounter++);
         auto component =
@@ -1561,8 +1550,8 @@ void SceneManager::InitializeActorClassAPI() {
         newComponents.emplace(actor->id, component);
         return component;
       };
-  std::function<void(Actor*, luabridge::LuaRef)> removeComponent =
-      [&](Actor* actor, luabridge::LuaRef component) {
+  std::function<void(Actor *, luabridge::LuaRef)> removeComponent =
+      [&](Actor *actor, luabridge::LuaRef component) {
         component["enabled"] = false;
         actor->pendingDeletion.emplace(component["key"].cast<std::string>());
         removedComponents.emplace(actor->id, component["key"]);
@@ -1571,9 +1560,9 @@ void SceneManager::InitializeActorClassAPI() {
   luabridge::getGlobalNamespace(_luaState)
       .beginClass<Actor>("Actor")
       .addFunction(
-          "GetName", +[](const Actor* actor) { return actor->name; })
+          "GetName", +[](const Actor *actor) { return actor->name; })
       .addFunction(
-          "GetID", +[](const Actor* actor) { return actor->id; })
+          "GetID", +[](const Actor *actor) { return actor->id; })
       .addFunction("GetComponentByKey", getComponentByKey)
       .addFunction("GetComponent", getComponent)
       .addFunction("GetComponents", getComponents)
@@ -1582,14 +1571,14 @@ void SceneManager::InitializeActorClassAPI() {
       .endClass();
 }
 void SceneManager::InitializeActorAPI() {
-  std::function<luabridge::LuaRef(const std::string&)> FindActor =
-      [&](const std::string& actorName) {
+  std::function<luabridge::LuaRef(const std::string &)> FindActor =
+      [&](const std::string &actorName) {
         auto ref = luabridge::LuaRef(_luaState);
         if (_actorsByName.find(actorName) == _actorsByName.end() ||
             _actorsByName.at(actorName).empty()) {
           return ref;
         }
-        for (auto& actorId : _actorsByName.at(actorName)) {
+        for (auto &actorId : _actorsByName.at(actorName)) {
           if (deactivedActors.count(actorId) == 0) {
             ref = luabridge::LuaRef(_luaState, &actors[actorId]);
             break;
@@ -1597,8 +1586,8 @@ void SceneManager::InitializeActorAPI() {
         }
         return ref;
       };
-  std::function<luabridge::LuaRef(const std::string&)> FindAllActor =
-      [&](const std::string& actorName) {
+  std::function<luabridge::LuaRef(const std::string &)> FindAllActor =
+      [&](const std::string &actorName) {
         auto ref = luabridge::newTable(_luaState);
         if (_actorsByName.find(actorName) == _actorsByName.end()) {
           return ref;
@@ -1611,22 +1600,22 @@ void SceneManager::InitializeActorAPI() {
         }
         return ref;
       };
-  std::function<luabridge::LuaRef(const std::string&)> CreateActor =
-      [&](const std::string& actorTemplate) {
-        auto* actor = &actors[_actorCounter];
+  std::function<luabridge::LuaRef(const std::string &)> CreateActor =
+      [&](const std::string &actorTemplate) {
+        auto *actor = &actors[_actorCounter];
         actor->id = _actorCounter++;
-        auto* templateActor = GetTemplateActor(actorTemplate);
+        auto *templateActor = GetTemplateActor(actorTemplate);
         LoadActorFromTemplate(*actor, *templateActor);
         _actorsByName[actor->name].emplace(actor->id);
-        for (auto& [componentName, component] : actor->components) {
+        for (auto &[componentName, component] : actor->components) {
           newComponents.emplace(actor->id, component);
         }
         actorChanges.emplace(actor->id, true);
 
         return luabridge::LuaRef(_luaState, actor);
       };
-  std::function<void(Actor&)> RemoveActor = [&](Actor& actor) {
-    for (auto& [componentName, component] : actor.components) {
+  std::function<void(Actor &)> RemoveActor = [&](Actor &actor) {
+    for (auto &[componentName, component] : actor.components) {
       component["enabled"] = false;
     }
     actorChanges.emplace(actor.id, false);
@@ -1656,7 +1645,7 @@ void SceneManager::InitializeApplicationAPI() {
           })
       .addFunction(
           "OpenURL",
-          +[](const std::string& url) {
+          +[](const std::string &url) {
 #ifdef _WIN32
             std::string command = "start" + url;
 #elif defined(__APPLE__)
@@ -1669,16 +1658,16 @@ void SceneManager::InitializeApplicationAPI() {
       .endNamespace();
 }
 void SceneManager::InitializeInputAPI() {
-  std::function<bool(const std::string&)> getKey =
-      [&](const std::string& keycode) {
+  std::function<bool(const std::string &)> getKey =
+      [&](const std::string &keycode) {
         return _inputManager->GetKey(keycode);
       };
-  std::function<bool(const std::string&)> getKeyDown =
-      [&](const std::string& keycode) {
+  std::function<bool(const std::string &)> getKeyDown =
+      [&](const std::string &keycode) {
         return _inputManager->GetKeyDown(keycode);
       };
-  std::function<bool(const std::string&)> getKeyUp =
-      [&](const std::string& keycode) {
+  std::function<bool(const std::string &)> getKeyUp =
+      [&](const std::string &keycode) {
         return _inputManager->GetKeyUp(keycode);
       };
   std::function<bool(int)> getmousebutton = [&](int buttonNum) {
@@ -1714,10 +1703,10 @@ void SceneManager::InitializeInputAPI() {
       .endNamespace();
 }
 void SceneManager::InitializeTextAPI() {
-  std::function<void(const std::string&, int, int, const std::string&,
+  std::function<void(const std::string &, int, int, const std::string &,
                      unsigned int, int, int, int, int)>
-      draw = [&](const std::string& text, int x, int y,
-                 const std::string& fontName, unsigned int fontSize, int r,
+      draw = [&](const std::string &text, int x, int y,
+                 const std::string &fontName, unsigned int fontSize, int r,
                  int g, int b, int a) {
         _graphicsManager->RenderText(fontName, fontSize, text, x, y,
                                      Graphics::RGBA{r, g, b, a});
@@ -1728,8 +1717,8 @@ void SceneManager::InitializeTextAPI() {
       .endNamespace();
 }
 void SceneManager::InitializeAudioAPI() {
-  std::function<void(int, const std::string&, bool)> play =
-      [&](int channel, const std::string& audioName, bool loop) {
+  std::function<void(int, const std::string &, bool)> play =
+      [&](int channel, const std::string &audioName, bool loop) {
         _audioManager->PlayAudio(audioName, channel, (loop) ? -1 : 0);
       };
   std::function<void(int)> halt = [&](int channel) {
@@ -1747,8 +1736,8 @@ void SceneManager::InitializeAudioAPI() {
       .endNamespace();
 }
 void SceneManager::InitializeDrawAPI() {
-  std::function<void(const std::string&, float, float)> drawUI =
-      [&](const std::string& imageName, float x, float y) {
+  std::function<void(const std::string &, float, float)> drawUI =
+      [&](const std::string &imageName, float x, float y) {
         _graphicsManager->DrawSprite(Graphics::SpriteInfo{imageName,
                                                           {int(x), int(y)},
                                                           {1.0f, 1.0f},
@@ -1757,9 +1746,9 @@ void SceneManager::InitializeDrawAPI() {
                                                           {255, 255, 255, 255},
                                                           {1, 0}});
       };
-  std::function<void(const std::string&, float, float, float, float, float,
+  std::function<void(const std::string &, float, float, float, float, float,
                      float, float)>
-      drawUIEx = [&](const std::string& imageName, float x, float y, float r,
+      drawUIEx = [&](const std::string &imageName, float x, float y, float r,
                      float g, float b, float a, float sortingOrder) {
         _graphicsManager->DrawSprite(Graphics::SpriteInfo{imageName,
                                                           {int(x), int(y)},
@@ -1769,8 +1758,8 @@ void SceneManager::InitializeDrawAPI() {
                                                           {r, g, b, a},
                                                           {1, sortingOrder}});
       };
-  std::function<void(const std::string&, int, int)> drawSprite =
-      [&](const std::string& imageName, float x, float y) {
+  std::function<void(const std::string &, int, int)> drawSprite =
+      [&](const std::string &imageName, float x, float y) {
         auto [spriteWidth, spriteHeight] =
             _graphicsManager->GetSpriteDimension(imageName);
         std::pair<float, float> pivot = {spriteWidth / 2, spriteHeight / 2};
@@ -1787,9 +1776,9 @@ void SceneManager::InitializeDrawAPI() {
                                                           {255, 255, 255, 255},
                                                           {0, 0}});
       };
-  std::function<void(const std::string&, float, float, float, float, float,
+  std::function<void(const std::string &, float, float, float, float, float,
                      float, float, float, float, float, float, float)>
-      drawSpriteEx = [&](const std::string& imageName, float x, float y,
+      drawSpriteEx = [&](const std::string &imageName, float x, float y,
                          float rotation, float scaleX, float scaleY,
                          float pivotX, float pivotY, float r, float g, float b,
                          float a, float sortingOrder) {
@@ -1847,10 +1836,10 @@ void SceneManager::InitializeCameraAPI() {
 }
 
 void SceneManager::InitializeSceneAPI() {
-  std::function<void(const std::string&)> load =
-      [&](const std::string& sceneName) { _nextScene = sceneName; };
+  std::function<void(const std::string &)> load =
+      [&](const std::string &sceneName) { _nextScene = sceneName; };
   std::function<std::string()> getCurrent = [&]() { return _currentScene; };
-  std::function<void(Actor*)> dontDestroy = [&](Actor* actor) {
+  std::function<void(Actor *)> dontDestroy = [&](Actor *actor) {
     actor->dontDestroy = true;
   };
   luabridge::getGlobalNamespace(_luaState)
@@ -1870,29 +1859,29 @@ void SceneManager::InitializePhysicsAPI() {
 }
 
 void SceneManager::InitializeEventsAPI() {
-  std::function<void(const std::string&, luabridge::LuaRef)> publish =
-      [&](const std::string& eventType, luabridge::LuaRef eventObject) {
+  std::function<void(const std::string &, luabridge::LuaRef)> publish =
+      [&](const std::string &eventType, luabridge::LuaRef eventObject) {
         if (subscriptions.find(eventType) == subscriptions.end()) {
           return;
         }
-        auto& callbacks = subscriptions.at(eventType);
-        for (auto& [component, func] : callbacks) {
+        auto &callbacks = subscriptions.at(eventType);
+        for (auto &[component, func] : callbacks) {
           try {
             func(component, eventObject);
-          } catch (const luabridge::LuaException& e) {
-            ReportError(component["actor"].cast<Actor*>()->name, e);
+          } catch (const luabridge::LuaException &e) {
+            ReportError(component["actor"].cast<Actor *>()->name, e);
           }
         }
       };
 
-  std::function<void(const std::string&, luabridge::LuaRef, luabridge::LuaRef)>
-      subscribe = [&](const std::string& eventType, luabridge::LuaRef component,
+  std::function<void(const std::string &, luabridge::LuaRef, luabridge::LuaRef)>
+      subscribe = [&](const std::string &eventType, luabridge::LuaRef component,
                       luabridge::LuaRef func) {
         newSubscriptions.emplace(eventType, component, func);
       };
 
-  std::function<void(const std::string&, luabridge::LuaRef, luabridge::LuaRef)>
-      unsubscribe = [&](const std::string& eventType,
+  std::function<void(const std::string &, luabridge::LuaRef, luabridge::LuaRef)>
+      unsubscribe = [&](const std::string &eventType,
                         luabridge::LuaRef component, luabridge::LuaRef func) {
         removeSubscriptions.emplace(eventType, component, func);
       };
@@ -1909,10 +1898,10 @@ void SceneManager::InitializeNetworkAPI() {
   if (!_networkManager) {
     return;
   }
-  std::function<void(const std::array<uint8_t, MESSAGE_DATA_SIZE>&)>
-      networkCallback = [&](const std::array<uint8_t, MESSAGE_DATA_SIZE>& msg) {
+  std::function<void(const std::vector<uint8_t> &)> networkCallback =
+      [&](const std::vector<uint8_t> &data) {
         std::lock_guard<std::mutex> lock(_networkLock);
-        _networkMessageQueue.push(std::vector<uint8_t>(msg.begin(), msg.end()));
+        _networkMessageQueue.push(data);
       };
   _networkManager->SetHandlePacketCallback(networkCallback);
 
@@ -1928,7 +1917,7 @@ void SceneManager::InitializeNetworkAPI() {
       _networkMessageQueue.pop();
     }
     std::cout << "Got message\n";
-    for (auto& v : msg) {
+    for (auto &v : msg) {
       std::cout << int(v) << ",";
     }
     std::cout << "\n";

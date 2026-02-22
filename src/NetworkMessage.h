@@ -88,6 +88,7 @@ struct NetworkMessage {
 };
 
 static constexpr auto kHeartbeatMessage = NetworkMessage{.Type = MessageType::HEARTBEAT, .Size = 0, .Data = {}};
+static constexpr auto kDisconnectMessage = NetworkMessage{.Type = MessageType::DISCONNECT, .Size = 0, .Data = {}};
 
 inline std::string ToString(const MessageType& type) {
   switch (type) {
@@ -106,7 +107,7 @@ inline std::string ToString(const MessageType& type) {
 
 inline std::ostream& operator<<(std::ostream& os, const NetworkMessage& msg) {
   os << "Header: Type=" << ToString(msg.Type) << ", Size=" << msg.Size << "\nData=[";
-  for (size_t i = 0; i < msg.Size; i++) {
+  for (size_t i = 0; i < std::min(msg.Size, MESSAGE_DATA_SIZE); i++) {
     os << static_cast<int>(msg.Data[i]) << " ";
   }
   os << "]";
@@ -114,4 +115,4 @@ inline std::ostream& operator<<(std::ostream& os, const NetworkMessage& msg) {
 }
 
 std::array<uint8_t, MESSAGE_SIZE> Serialize(const NetworkMessage& msg);
-NetworkMessage Deserialize(const std::array<uint8_t, MESSAGE_SIZE>& buffer);
+NetworkMessage DeserializeHeader(const std::array<uint8_t, MESSAGE_SIZE>& buffer);

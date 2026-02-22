@@ -20,7 +20,7 @@ std::array<uint8_t, MESSAGE_SIZE> Serialize(const NetworkMessage& msg) {
   return buffer;
 }
 
-NetworkMessage Deserialize(const std::array<uint8_t, MESSAGE_SIZE>& buffer) {
+NetworkMessage DeserializeHeader(const std::array<uint8_t, MESSAGE_SIZE>& buffer) {
   NetworkMessage msg{};
   size_t offset = 0;
 
@@ -32,9 +32,5 @@ NetworkMessage Deserialize(const std::array<uint8_t, MESSAGE_SIZE>& buffer) {
   std::memcpy(&msg.Size, buffer.data() + offset, sizeof(msg.Size));
   msg.Size = NetworkToHost(msg.Size);
   offset += sizeof(msg.Size);
-  
-  // Read data
-  std::memcpy(msg.Data.data(), buffer.data() + offset, std::min(msg.Size, MESSAGE_DATA_SIZE));
-
   return msg;
 }

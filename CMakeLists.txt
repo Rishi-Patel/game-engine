@@ -56,5 +56,5 @@ target_link_libraries(game_engine PRIVATE Tracy::TracyClient)
 
 ######### Network Client #########
 
-add_executable(client "src/Client.cpp" "src/NetworkMessage.cpp")
-target_link_libraries(client PRIVATE Boost::asio)
+add_executable(client "src/Client.cpp" "src/NetworkMessage.cpp" "src/NetworkManager.cpp")
+target_link_libraries(client PRIVATE quill::quill Boost::asio)
