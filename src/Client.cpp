@@ -1,6 +1,7 @@
 #include <array>
 #include <boost/asio.hpp>
 #include <chrono>
+#include <cstdint>
 #include <iostream>
 #include <thread>
 
@@ -43,25 +44,22 @@ int main(int argc, char *argv[]) {
 
   networkManager.Connect(Endpoint{"127.0.0.1", 1330});
 
-  NetworkMessage msg;
-  msg.Type = MessageType::USER;
+  std::vector<uint8_t> data(2 * sizeof(unsigned int));
   unsigned int x = 1;
   unsigned int y = 7;
   x = HostToNetwork(x);
   y = HostToNetwork(y);
-  std::memcpy(msg.Data.data(), &x, sizeof(unsigned int));
-  msg.Size = sizeof(x);
-  std::memcpy(msg.Data.data() + sizeof(unsigned int), &y, sizeof(unsigned int));
-  msg.Size += sizeof(y);
+  std::memcpy(data.data(), &x, sizeof(unsigned int));
+  std::memcpy(data.data() + sizeof(unsigned int), &y, sizeof(unsigned int));
 
   for (int i = 0; i < 10; i++) {
-    std::cout << "Message size = " << msg.Size << std::endl;
-    std::cout << "Sending message\n" << msg << std::endl;
-    if (!networkManager.SendNetworkMessage(1, msg)) {
+    // std::cout << "Message size = " << data.size() << std::endl;
+    // std::cout << "Sending message\n" << std::endl;
+    if (!networkManager.Send(1, data)) {
       std::cout << "Failed to send message\n";
       return 0;
     }
-    std::cout << "Sent message\n";
+    // std::cout << "Sent message\n";
 
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }

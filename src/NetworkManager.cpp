@@ -14,6 +14,7 @@
 #include "quill/Frontend.h"
 #include "quill/LogMacros.h"
 #include "quill/sinks/ConsoleSink.h"
+#include "quill/std/Vector.h"
 
 static constexpr auto kLoggerName = "NetworkThread";
 
@@ -30,7 +31,7 @@ public:
   uint32_t Id;
   boost::asio::steady_timer HeartbeatTimer;
   NetworkMessage LastMessage;
-  std::queue<NetworkMessage> PendingWrites;
+  std::queue<std::vector<uint8_t>> PendingWrites;
   std::array<uint8_t, MESSAGE_SIZE> RawByteBuffer;
 };
 
@@ -70,26 +71,37 @@ void NetworkManager::StartNetworkThread(
   _ioContext.run();
 }
 
-bool NetworkManager::SendNetworkMessage(uint32_t sessionId,
-                                        const NetworkMessage &msg) {
-
-  std::shared_ptr<Session> session = nullptr;
-  {
-    std::lock_guard<std::mutex> lock(_sessionLock);
-    auto sessionItr = _sessions.find(sessionId);
-    if (sessionItr == _sessions.end()) {
-      return false;
-    }
-    session = sessionItr->second;
+bool NetworkManager::Send(uint32_t sessionId, std::span<const uint8_t> data) {
+  std::shared_ptr<Session> session = GetSession(sessionId);
+  if (!session) {
+    return false;
   }
+  for (std::size_t i = 0; i < data.size(); i += MESSAGE_DATA_SIZE) {
+    NetworkMessage msg{.Type = MessageType::USER, .Size = 0, .Data = {}};
+    msg.Size =
+        std::min<std::size_t>(std::size_t(MESSAGE_DATA_SIZE), data.size() - i);
+    std::memcpy(msg.Data.data(), data.data() + i, msg.Size);
 
-  boost::asio::post(_ioContext, [this, session = std::move(session), msg]() {
-    // If there is something in the queue, it means there is an active write
-    // going on and we are backed up
-    session->PendingWrites.emplace(std::move(msg));
-    AsyncSend(std::move(session));
-  });
+    SendNetworkMessage(session, msg);
+  }
   return true;
+}
+
+void NetworkManager::SendNetworkMessage(std::shared_ptr<Session> session,
+                                        NetworkMessage msg) {
+  boost::asio::post(
+      _ioContext, [this, session = std::move(session), msg = std::move(msg)]() {
+        // If there is something in the queue, it means there is an active write
+        // going on and we are backed up
+        auto serializedMsg = Serialize(msg);
+        bool writeInProgress = !session->PendingWrites.empty();
+        session->PendingWrites.emplace(serializedMsg.begin(),
+                                       serializedMsg.begin() +
+                                           MESSAGE_HEADER_SIZE + msg.Size);
+        if (!writeInProgress) {
+          AsyncSend(std::move(session));
+        }
+      });
 }
 
 void NetworkManager::BroadcastMessage(const NetworkMessage &msg) {
@@ -103,19 +115,25 @@ void NetworkManager::BroadcastMessage(const NetworkMessage &msg) {
                              std::back_inserter(sessions),
                              [](const auto &elm) { return elm.second; });
     }
+    auto serializedMsg = Serialize(msg);
     for (auto &session : sessions) {
       if (!session->IsActive) {
         continue;
       }
       // If there is something in the queue, it means there is an active write
       // going on and we are backed up
-      session->PendingWrites.emplace(msg);
-      AsyncSend(session);
+      bool writeInProgress = !session->PendingWrites.empty();
+      session->PendingWrites.emplace(serializedMsg.begin(),
+                                     serializedMsg.begin() +
+                                         MESSAGE_HEADER_SIZE + msg.Size);
+      if (!writeInProgress) {
+        AsyncSend(std::move(session));
+      }
     }
   });
 }
 
-void NetworkManager::RemoveSession(uint32_t sessionId) {
+void NetworkManager::RemoveSession(std::shared_ptr<Session> session) {
   // // Notify all sessions
   // NetworkMessage leave_msg = kDisconnectMessage;
   // std::memcpy(leave_msg.Data.data(), &sessionId, sizeof(uint32_t));
@@ -123,17 +141,13 @@ void NetworkManager::RemoveSession(uint32_t sessionId) {
   // BroadcastMessage(leave_msg);
   {
     std::lock_guard<std::mutex> lock(_sessionLock);
-    if (_sessions.find(sessionId) == _sessions.end()) {
-      return;
-    }
-    _sessions[sessionId]->IsActive = false;
-    _sessions[sessionId]->HeartbeatTimer.cancel();
-
-    _sessions.erase(sessionId);
+    _sessions.erase(session->Id);
   }
-  LOG_INFO(_logger, "Deleted Session, ID: {}", sessionId);
+  session->IsActive = false;
+  session->HeartbeatTimer.cancel();
+  LOG_INFO(_logger, "Deleted Session, ID: {}", session->Id);
   if (_onDisconnectCallback) {
-    _onDisconnectCallback(sessionId);
+    _onDisconnectCallback(session->Id);
   }
 }
 
@@ -167,17 +181,10 @@ void NetworkManager::AsyncSend(std::shared_ptr<Session> session) {
   }
 
   boost::asio::async_write(
-      session->Socket,
-      boost::asio::buffer(Serialize(session->PendingWrites.front()),
-                          session->PendingWrites.front().Size +
-                              MESSAGE_HEADER_SIZE),
+      session->Socket, boost::asio::buffer(session->PendingWrites.front()),
       [this, session](boost::system::error_code ec, std::size_t bytesSent) {
-        LOG_DEBUG(_logger,
-                  "Message Sent; Session={}; Type={}; Size={}; "
-                  "BytesSent={}",
-                  session->Id,
-                  static_cast<uint32_t>(session->PendingWrites.front().Type),
-                  session->PendingWrites.front().Size, bytesSent);
+        LOG_INFO(_logger, "Message Sent; Session={}; BytesSent={}", session->Id,
+                 bytesSent);
         if (!ec) {
           session->PendingWrites.pop();
           if (!session->PendingWrites.empty()) {
@@ -188,7 +195,7 @@ void NetworkManager::AsyncSend(std::shared_ptr<Session> session) {
           LOG_WARNING(_logger,
                       "Failed to send message to session {}: [{}] Error {}",
                       session->Id, ec.value(), ec.message());
-          RemoveSession(session->Id);
+          RemoveSession(session);
         }
       });
 }
@@ -196,8 +203,14 @@ void NetworkManager::AsyncSend(std::shared_ptr<Session> session) {
 void NetworkManager::StartSession(std::shared_ptr<Session> session) {
   LOG_INFO(_logger, "Session {} started", session->Id);
   session->IsActive = true;
-  // StartHeartbeatTimer(session);
+  StartHeartbeatTimer(session);
   AcceptSessionMessage(session);
+  if (session->IsClient) {
+    LOG_INFO(_logger, "Sending heartbeat to server from client session {}",
+             session->Id);
+    auto msg = kHeartbeatMessage;
+    SendNetworkMessage(session, msg);
+  }
 
   if (_onConnectCallback) {
     _onConnectCallback(session->Id);
@@ -212,7 +225,7 @@ void NetworkManager::StartHeartbeatTimer(std::shared_ptr<Session> session) {
       LOG_INFO(_logger, "Sending heartbeat to server from client session {}",
                session->Id);
       auto msg = kHeartbeatMessage;
-      std::ignore = SendNetworkMessage(session->Id, msg);
+      SendNetworkMessage(session, msg);
     }
 
     if (!session->IsActive || ec) {
@@ -227,7 +240,7 @@ void NetworkManager::StartHeartbeatTimer(std::shared_ptr<Session> session) {
       } else {
         LOG_WARNING(_logger, "Session {} failed heartbeat check", session->Id);
       }
-      RemoveSession(session->Id);
+      RemoveSession(session);
       return;
     }
     session->IsActive = false;
@@ -237,19 +250,18 @@ void NetworkManager::StartHeartbeatTimer(std::shared_ptr<Session> session) {
 
 void NetworkManager::AckHeartbeat(uint32_t sessionId) {
   LOG_INFO(_logger, "Heartbeat received from session {}", sessionId);
-  {
-    std::lock_guard<std::mutex> lock(_sessionLock);
-    auto it = _sessions.find(sessionId);
-    if (it == _sessions.end()) {
-      return;
-    }
-    it->second->IsActive = true;
-    if (it->second->IsClient) {
-      return;
-    }
+  std::shared_ptr<Session> session = GetSession(sessionId);
+  if (!session) {
+    return;
   }
+
+  session->IsActive = true;
+  if (session->IsClient) {
+    return;
+  }
+
   auto msg = kHeartbeatMessage;
-  std::ignore = SendNetworkMessage(sessionId, msg);
+  SendNetworkMessage(session, msg);
 }
 
 void NetworkManager::HandleSessionMessage(uint32_t sessionId,
@@ -258,7 +270,7 @@ void NetworkManager::HandleSessionMessage(uint32_t sessionId,
   case MessageType::CONNECT:
     break;
   case MessageType::DISCONNECT:
-    RemoveSession(sessionId);
+    Disconnect(sessionId);
     break;
   case MessageType::HEARTBEAT:
     AckHeartbeat(sessionId);
@@ -276,7 +288,7 @@ void NetworkManager::HandleUserMessage(const NetworkMessage &msg) {
     std::vector<uint8_t> data(msg.Data.begin(),
                               msg.Data.begin() +
                                   std::min(msg.Size, MESSAGE_DATA_SIZE));
-    LOG_INFO(_logger, "Sending user packet to game thread");
+    LOG_INFO(_logger, "Sending user packet to game thread: {}", data);
     _handleUserPacketCallback(std::move(data));
   }
 }
@@ -295,7 +307,7 @@ void NetworkManager::AcceptSessionMessage(std::shared_ptr<Session> session) {
               _logger,
               "Failed to read message header from session {}: [{}] Error {}",
               session->Id, ec.value(), ec.message());
-          RemoveSession(session->Id);
+          RemoveSession(session);
           return;
         }
 
@@ -316,19 +328,19 @@ void NetworkManager::AcceptSessionMessage(std::shared_ptr<Session> session) {
                             "Failed to read message data from session {}: [{}] "
                             "Error {}",
                             session->Id, ec.value(), ec.message());
-                RemoveSession(session->Id);
+                RemoveSession(session);
                 return;
               }
               std::memcpy(
                   session->LastMessage.Data.data(),
                   session->RawByteBuffer.data() + MESSAGE_HEADER_SIZE,
                   std::min(session->LastMessage.Size, MESSAGE_DATA_SIZE));
-              LOG_DEBUG(_logger,
-                        "Message Received; Session={}; Type={}; Size={}; "
-                        "BytesRecv={}",
-                        session->Id,
-                        static_cast<uint32_t>(session->LastMessage.Type),
-                        session->LastMessage.Size, bytesRecv);
+              LOG_INFO(_logger,
+                       "Message Received; Session={}; Type={}; Size={}; "
+                       "BytesRecv={}",
+                       session->Id,
+                       static_cast<uint32_t>(session->LastMessage.Type),
+                       session->LastMessage.Size, bytesRecv);
               HandleSessionMessage(session->Id, session->LastMessage);
               AcceptSessionMessage(std::move(session));
             });
@@ -362,6 +374,23 @@ void NetworkManager::Connect(const Endpoint &endpoint) {
 }
 
 void NetworkManager::Disconnect(uint32_t sessionId) {
-  std::ignore = SendNetworkMessage(sessionId, kDisconnectMessage);
-  RemoveSession(sessionId);
+  auto session = GetSession(sessionId);
+  if (!session) {
+    return;
+  }
+
+  SendNetworkMessage(session, kDisconnectMessage);
+  RemoveSession(session);
+}
+
+std::shared_ptr<Session> NetworkManager::GetSession(uint32_t sessionId) {
+  std::shared_ptr<Session> session = nullptr;
+  {
+    std::lock_guard<std::mutex> lock(_sessionLock);
+    auto it = _sessions.find(sessionId);
+    if (it != _sessions.end()) {
+      session = it->second;
+    }
+  }
+  return session;
 }

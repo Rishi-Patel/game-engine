@@ -20,10 +20,8 @@ public:
 
   void Connect(const Endpoint &endpoint);
   void Disconnect(uint32_t sessionId);
-  [[nodiscard]] bool SendNetworkMessage(uint32_t sessionId,
-                                        const NetworkMessage &msg);
+  [[nodiscard]] bool Send(uint32_t sessionId, std::span<const uint8_t> data);
   void BroadcastMessage(const NetworkMessage &msg);
-  void RemoveSession(uint32_t sessionId);
   void SetHandlePacketCallback(
       std::function<void(const std::vector<uint8_t> &)> &callback) {
     _handleUserPacketCallback = callback;
@@ -62,4 +60,8 @@ private:
   void AcceptSessionMessage(std::shared_ptr<Session> session);
   void StartNetworkThread(const std::optional<Endpoint> &endpoint);
   void HandleUserMessage(const NetworkMessage &message);
+  void SendNetworkMessage(std::shared_ptr<Session> session, NetworkMessage msg);
+  void RemoveSession(std::shared_ptr<Session> session);
+
+  std::shared_ptr<Session> GetSession(uint32_t sessionId);
 };

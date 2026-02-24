@@ -2,10 +2,10 @@
 
 #include <stdexcept>
 
-std::array<uint8_t, MESSAGE_SIZE> Serialize(const NetworkMessage& msg) {
+std::array<uint8_t, MESSAGE_SIZE> Serialize(const NetworkMessage &msg) {
   std::array<uint8_t, MESSAGE_SIZE> buffer{};
   size_t offset = 0;
-  
+
   // Serialize type
   offset +=
       SerializeNum(buffer.data() + offset, static_cast<uint8_t>(msg.Type));
@@ -14,13 +14,15 @@ std::array<uint8_t, MESSAGE_SIZE> Serialize(const NetworkMessage& msg) {
   offset += SerializeNum(buffer.data() + offset, msg.Size);
 
   // Serialize data
-  std::memcpy(buffer.data() + offset, msg.Data.data(),
-              std::max(0, static_cast<int>(std::min(msg.Size, MESSAGE_DATA_SIZE))));
+  std::memcpy(
+      buffer.data() + offset, msg.Data.data(),
+      std::max(0, static_cast<int>(std::min(msg.Size, MESSAGE_DATA_SIZE))));
 
   return buffer;
 }
 
-NetworkMessage DeserializeHeader(const std::array<uint8_t, MESSAGE_SIZE>& buffer) {
+NetworkMessage
+DeserializeHeader(const std::array<uint8_t, MESSAGE_SIZE> &buffer) {
   NetworkMessage msg{};
   size_t offset = 0;
 

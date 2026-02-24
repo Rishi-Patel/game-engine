@@ -6,8 +6,8 @@
 #include <concepts>
 #include <cstdint>
 #include <cstring>
-#include <string>
 #include <ostream>
+#include <string>
 
 /* HostToNetwork: Converts integer from host endian to
  *                network endian
@@ -17,7 +17,7 @@
  *          in network endian order
  */
 template <std::integral T>
-constexpr std::make_unsigned_t<T> HostToNetwork(const T& num) {
+constexpr std::make_unsigned_t<T> HostToNetwork(const T &num) {
   using U = std::make_unsigned_t<T>;
   // 1 byte integers or hosts with big endian encodings dont
   // need to be converted
@@ -35,8 +35,7 @@ constexpr std::make_unsigned_t<T> HostToNetwork(const T& num) {
  * @return: Unsigned type of equal byte size as input type
  *          in host endian order
  */
-template <std::integral T>
-constexpr T NetworkToHost(const T& num) {
+template <std::integral T> constexpr T NetworkToHost(const T &num) {
   // 1 byte integers or hosts with big endian encodings dont
   // need to be converted
   if constexpr (sizeof(T) == 1 || std::endian::native == std::endian::big) {
@@ -47,14 +46,14 @@ constexpr T NetworkToHost(const T& num) {
 }
 
 template <std::integral T>
-uint32_t SerializeNum(uint8_t* buffer, const T& num) {
+uint32_t SerializeNum(uint8_t *buffer, const T &num) {
   std::make_unsigned_t<T> serializedNum = HostToNetwork(num);
   std::memcpy(buffer, &serializedNum, sizeof(serializedNum));
   return sizeof(serializedNum);
 }
 
 template <std::floating_point T>
-uint32_t SerializeNum(uint8_t* buffer, const T& num) {
+uint32_t SerializeNum(uint8_t *buffer, const T &num) {
   // Annoyingly, I cant think of a better way to map floating points
   // to their integral sizes than to write them here
   // At least if I dont have a type in the map I can throw a compile time
@@ -78,8 +77,7 @@ enum class MessageType : uint8_t {
 
 constexpr uint32_t MESSAGE_DATA_SIZE = 1024;
 constexpr uint32_t MESSAGE_HEADER_SIZE = sizeof(MessageType) + sizeof(uint32_t);
-constexpr uint32_t MESSAGE_SIZE =
-    MESSAGE_HEADER_SIZE + MESSAGE_DATA_SIZE;
+constexpr uint32_t MESSAGE_SIZE = MESSAGE_HEADER_SIZE + MESSAGE_DATA_SIZE;
 
 struct NetworkMessage {
   MessageType Type;
@@ -87,26 +85,29 @@ struct NetworkMessage {
   std::array<uint8_t, MESSAGE_DATA_SIZE> Data;
 };
 
-static constexpr auto kHeartbeatMessage = NetworkMessage{.Type = MessageType::HEARTBEAT, .Size = 0, .Data = {}};
-static constexpr auto kDisconnectMessage = NetworkMessage{.Type = MessageType::DISCONNECT, .Size = 0, .Data = {}};
+static constexpr auto kHeartbeatMessage =
+    NetworkMessage{.Type = MessageType::HEARTBEAT, .Size = 0, .Data = {}};
+static constexpr auto kDisconnectMessage =
+    NetworkMessage{.Type = MessageType::DISCONNECT, .Size = 0, .Data = {}};
 
-inline std::string ToString(const MessageType& type) {
+inline std::string ToString(const MessageType &type) {
   switch (type) {
-    case MessageType::CONNECT:
-      return "CONNECT";
-    case MessageType::DISCONNECT:
-      return "DISCONNECT";
-    case MessageType::HEARTBEAT:
-      return "HEARTBEAT";
-    case MessageType::USER:
-      return "USER";
-    default:
-      return "UNKNOWN";
+  case MessageType::CONNECT:
+    return "CONNECT";
+  case MessageType::DISCONNECT:
+    return "DISCONNECT";
+  case MessageType::HEARTBEAT:
+    return "HEARTBEAT";
+  case MessageType::USER:
+    return "USER";
+  default:
+    return "UNKNOWN";
   }
 }
 
-inline std::ostream& operator<<(std::ostream& os, const NetworkMessage& msg) {
-  os << "Header: Type=" << ToString(msg.Type) << ", Size=" << msg.Size << "\nData=[";
+inline std::ostream &operator<<(std::ostream &os, const NetworkMessage &msg) {
+  os << "Header: Type=" << ToString(msg.Type) << ", Size=" << msg.Size
+     << "\nData=[";
   for (size_t i = 0; i < std::min(msg.Size, MESSAGE_DATA_SIZE); i++) {
     os << static_cast<int>(msg.Data[i]) << " ";
   }
@@ -114,5 +115,6 @@ inline std::ostream& operator<<(std::ostream& os, const NetworkMessage& msg) {
   return os;
 }
 
-std::array<uint8_t, MESSAGE_SIZE> Serialize(const NetworkMessage& msg);
-NetworkMessage DeserializeHeader(const std::array<uint8_t, MESSAGE_SIZE>& buffer);
+std::array<uint8_t, MESSAGE_SIZE> Serialize(const NetworkMessage &msg);
+NetworkMessage
+DeserializeHeader(const std::array<uint8_t, MESSAGE_SIZE> &buffer);
