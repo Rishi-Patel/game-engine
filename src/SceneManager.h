@@ -160,6 +160,7 @@ class SceneManager {
   void RunOnLateUpdate();
   void AddComponents();
   void RemoveComponents();
+  void CleanupActorComponents(Actor& actor);
 
   void InitializeAPI();
   void InitializeClassAPI();

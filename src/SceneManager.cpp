@@ -293,8 +293,12 @@ struct ParticleSystem {
   void DisableSpawn() { should_spawn_new_particles = false; }
   void EnableSpawn() { should_spawn_new_particles = true; }
 
+  std::pair<int, int> cachedSpriteDimension{0, 0};
+
   void OnStart() {
     static_graphics_manager->LoadParticle(ImageName);
+    cachedSpriteDimension =
+        static_graphics_manager->GetSpriteDimension(ImageName);
 
     AngleGenerator = RandomEngine(MinSpawnAngle, MaxSpawnAngle, 298);
     RadiusGenerator = RandomEngine(MinSpawnRadius, MaxSpawnRadius, 404);
@@ -394,9 +398,21 @@ struct ParticleSystem {
                          lifetime_percentage)
               : start_color_a;
 
-      StaticDrawSprite(ImageName, x, y, rotation, interp_scale, interp_scale,
-                       0.5f, 0.5f, color_r, color_g, color_b, color_a,
-                       SortingOrder);
+      auto [spriteWidth, spriteHeight] = cachedSpriteDimension;
+      std::pair<float, float> pivot = {interp_scale * spriteWidth * 0.5f,
+                                       interp_scale * spriteHeight * 0.5f};
+      auto screenPosition = StaticConvertCordsToScreen(x, y);
+      screenPosition.first -= pivot.first;
+      screenPosition.second -= pivot.second;
+      static_graphics_manager->DrawSprite(Graphics::SpriteInfo{
+          ImageName,
+          screenPosition,
+          {interp_scale, interp_scale},
+          pivot,
+          static_cast<float>(int(rotation)),
+          {static_cast<float>(color_r), static_cast<float>(color_g),
+           static_cast<float>(color_b), static_cast<float>(color_a)},
+          {0, static_cast<float>(SortingOrder)}});
       i++;
     }
     ParticleSystemFrameNumber++;
@@ -425,7 +441,7 @@ void ContactListener::BeginContact(b2Contact *contact) {
 
   auto &actorAComponentsToUpdate = actorA->onContactBeginComponents;
   auto &actorBComponentsToUpdate = actorB->onContactBeginComponents;
-  std::string functionName = "OnCollisionEnter";
+  const char *functionName = "OnCollisionEnter";
   bool isTrigger =
       (contact->GetFixtureA()->GetFilterData().categoryBits == 0x0002);
   if (isTrigger) {
@@ -474,7 +490,7 @@ void ContactListener::EndContact(b2Contact *contact) {
 
   auto &actorAComponentsToUpdate = actorA->onContactEndComponents;
   auto &actorBComponentsToUpdate = actorB->onContactEndComponents;
-  std::string functionName = "OnCollisionExit";
+  const char *functionName = "OnCollisionExit";
   bool isTrigger =
       (contact->GetFixtureA()->GetFilterData().categoryBits == 0x0002);
   if (isTrigger) {
@@ -992,52 +1008,56 @@ void SceneManager::RunOnUpdate() {
   }
 }
 
+void SceneManager::CleanupActorComponents(Actor &actor) {
+  for (auto &componentName : actor.onDestroyComponents) {
+    auto component = actor.components.at(componentName);
+    try {
+      component["OnDestroy"](component);
+    } catch (const luabridge::LuaException &e) {
+      ReportError(actor.name, e);
+    }
+  }
+  auto rbIt = actor._componentKeysByTemplateType.find("Rigidbody");
+  if (rbIt != actor._componentKeysByTemplateType.end()) {
+    for (auto &componentName : rbIt->second) {
+      auto component = actor.components.at(componentName);
+      _physicsWorld->DestroyBody(component.cast<RigidBody *>()->body);
+      delete component.cast<RigidBody *>();
+    }
+  }
+  auto psIt = actor._componentKeysByTemplateType.find("ParticleSystem");
+  if (psIt != actor._componentKeysByTemplateType.end()) {
+    for (auto &componentName : psIt->second) {
+      auto component = actor.components.at(componentName);
+      delete component.cast<ParticleSystem *>();
+    }
+  }
+}
+
 void SceneManager::HandleActorChanges() {
   while (actorChanges.empty() == false) {
     auto [actorId, isNewActor] = actorChanges.front();
     actorChanges.pop();
     if (isNewActor) {
-      if (actors[actorId].onUpdateComponents.empty() == false) {
-        onUpdateActors.emplace(actorId, &actors[actorId]);
+      auto &actor = actors[actorId];
+      if (actor.onUpdateComponents.empty() == false) {
+        onUpdateActors.emplace(actorId, &actor);
       }
-      if (actors[actorId].onLateUpdateComponents.empty() == false) {
+      if (actor.onLateUpdateComponents.empty() == false) {
         onLateUpdateActors.insert(actorId);
       }
     } else {
-      if (actors.find(actorId) == actors.end()) {
+      auto it = actors.find(actorId);
+      if (it == actors.end()) {
         continue;
       }
-      for (auto &componentName : actors[actorId].onDestroyComponents) {
-        auto component = actors[actorId].components.at(componentName);
-        try {
-          component["OnDestroy"](component);
-        } catch (const luabridge::LuaException &e) {
-          ReportError(actors[actorId].name, e);
-        }
-      }
-      if (actors[actorId]._componentKeysByTemplateType.find("Rigidbody") !=
-          actors[actorId]._componentKeysByTemplateType.end()) {
-        for (auto &componentName :
-             actors[actorId]._componentKeysByTemplateType.at("Rigidbody")) {
-          auto component = actors[actorId].components.at(componentName);
-          _physicsWorld->DestroyBody(component.cast<RigidBody *>()->body);
-          delete component.cast<RigidBody *>();
-        }
-      }
-      if (actors[actorId]._componentKeysByTemplateType.find("ParticleSystem") !=
-          actors[actorId]._componentKeysByTemplateType.end()) {
-        for (auto &componentName :
-             actors[actorId]._componentKeysByTemplateType.at(
-                 "ParticleSystem")) {
-          auto component = actors[actorId].components.at(componentName);
-          delete component.cast<ParticleSystem *>();
-        }
-      }
+      auto &actor = it->second;
+      CleanupActorComponents(actor);
 
       onUpdateActors.erase(actorId);
       onLateUpdateActors.erase(actorId);
-      _actorsByName[actors[actorId].name].erase(actorId);
-      actors.erase(actorId);
+      _actorsByName[actor.name].erase(actorId);
+      actors.erase(it);
       deactivedActors.erase(actorId);
     }
   }
@@ -1122,17 +1142,19 @@ void SceneManager::UpdateSceneActors() {
   while (removeSubscriptions.empty() == false) {
     auto [eventType, component, func] = removeSubscriptions.front();
     removeSubscriptions.pop();
-    auto &callbacks = subscriptions.at(eventType);
-    int i = 0;
-    for (auto &[_component, _func] : callbacks) {
-      // if (_component == component && _func == func) {
-      //   callbacks.erase(callbacks.begin() + i);
-      //   break;
-      // }
-      i++;
+    auto subIt = subscriptions.find(eventType);
+    if (subIt == subscriptions.end()) {
+      continue;
+    }
+    auto &callbacks = subIt->second;
+    for (auto it = callbacks.begin(); it != callbacks.end(); ++it) {
+      if (it->first == component && it->second == func) {
+        callbacks.erase(it);
+        break;
+      }
     }
     if (callbacks.empty()) {
-      subscriptions.erase(eventType);
+      subscriptions.erase(subIt);
     }
   }
 
@@ -1163,38 +1185,15 @@ void SceneManager::SetScene(const std::string &sceneName) {
       if (itr->second.dontDestroy) {
         itr++;
       } else {
-        for (auto &componentName : itr->second.onDestroyComponents) {
-          auto component = itr->second.components.at(componentName);
-          try {
-            component["OnDestroy"](component);
-          } catch (const luabridge::LuaException &e) {
-            ReportError(itr->second.name, e);
-          }
-        }
-        if (itr->second._componentKeysByTemplateType.find("Rigidbody") !=
-            itr->second._componentKeysByTemplateType.end()) {
-          for (auto &componentName :
-               itr->second._componentKeysByTemplateType.at("Rigidbody")) {
-            auto component = itr->second.components.at(componentName);
-            _physicsWorld->DestroyBody(component.cast<RigidBody *>()->body);
-            delete component.cast<RigidBody *>();
-          }
-        }
-        if (itr->second._componentKeysByTemplateType.find("ParticleSystem") !=
-            itr->second._componentKeysByTemplateType.end()) {
-          for (auto &componentName :
-               itr->second._componentKeysByTemplateType.at("ParticleSystem")) {
-            auto component = itr->second.components.at(componentName);
-            delete component.cast<ParticleSystem *>();
-          }
-        }
+        auto &actor = itr->second;
+        CleanupActorComponents(actor);
 
-        _actorsByName[itr->second.name].erase(itr->second.id);
-        onUpdateActors.erase(itr->second.id);
-        onLateUpdateActors.erase(itr->second.id);
-        deactivedActors.erase(itr->second.id);
-        if (_actorsByName[itr->second.name].empty()) {
-          _actorsByName.erase(itr->second.name);
+        _actorsByName[actor.name].erase(actor.id);
+        onUpdateActors.erase(actor.id);
+        onLateUpdateActors.erase(actor.id);
+        deactivedActors.erase(actor.id);
+        if (_actorsByName[actor.name].empty()) {
+          _actorsByName.erase(actor.name);
         }
         itr = actors.erase(itr);
       }
