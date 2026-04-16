@@ -340,7 +340,6 @@ struct ParticleSystem {
       SpawnParticles();
     }
 
-    // Remove expired particles
     int i = 0;
     for (auto &[x, y, vx, vy, rotationSpeed, initalScale, rotation,
                 particleStartFrame, isActive] : Particles) {
@@ -348,23 +347,16 @@ struct ParticleSystem {
         i++;
         continue;
       }
-
       int framesParticleHasBeenAlive =
           ParticleSystemFrameNumber - particleStartFrame;
+
+      // Remove old particles
       if (framesParticleHasBeenAlive >= std::max(1, ParticleLifeTimeInFrames)) {
         isActive = false;
         FreeList.push(i);
-      }
-      i++;
-    }
-
-    for (auto &[x, y, vx, vy, rotationSpeed, initalScale, rotation,
-                particleStartFrame, isActive] : Particles) {
-      if (!isActive) {
+        i++;
         continue;
       }
-      int framesParticleHasBeenAlive =
-          ParticleSystemFrameNumber - particleStartFrame;
 
       vx += ParticleAccelerationX;
       vy += ParticleAccelerationY;
@@ -405,6 +397,7 @@ struct ParticleSystem {
       StaticDrawSprite(ImageName, x, y, rotation, interp_scale, interp_scale,
                        0.5f, 0.5f, color_r, color_g, color_b, color_a,
                        SortingOrder);
+      i++;
     }
     ParticleSystemFrameNumber++;
   }
