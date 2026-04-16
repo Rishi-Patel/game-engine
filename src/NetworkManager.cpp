@@ -22,11 +22,12 @@ class Session : public std::enable_shared_from_this<Session> {
 public:
   Session(bool isClient, bool isActive, boost::asio::ip::tcp::socket socket,
           uint32_t id, boost::asio::steady_timer timer)
-      : IsClient(isClient), IsActive(isActive), Socket(std::move(socket)),
-        Id(id), HeartbeatTimer(std::move(timer)) {}
+      : IsClient(isClient), IsActive(isActive), HeartbeatMissCount(0),
+        Socket(std::move(socket)), Id(id), HeartbeatTimer(std::move(timer)) {}
   ~Session() { Socket.close(); }
   bool IsClient;
   bool IsActive;
+  int HeartbeatMissCount;
   boost::asio::ip::tcp::socket Socket;
   uint32_t Id;
   boost::asio::steady_timer HeartbeatTimer;
@@ -134,17 +135,20 @@ void NetworkManager::BroadcastMessage(const NetworkMessage &msg) {
 }
 
 void NetworkManager::RemoveSession(std::shared_ptr<Session> session) {
+  if (!session->IsActive) {
+    return;
+  }
   // // Notify all sessions
   // NetworkMessage leave_msg = kDisconnectMessage;
   // std::memcpy(leave_msg.Data.data(), &sessionId, sizeof(uint32_t));
   // leave_msg.Size += sizeof(uint32_t);
   // BroadcastMessage(leave_msg);
+  session->IsActive = false;
+  session->HeartbeatTimer.cancel();
   {
     std::lock_guard<std::mutex> lock(_sessionLock);
     _sessions.erase(session->Id);
   }
-  session->IsActive = false;
-  session->HeartbeatTimer.cancel();
   LOG_INFO(_logger, "Deleted Session, ID: {}", session->Id);
   if (_onDisconnectCallback) {
     _onDisconnectCallback(session->Id);
@@ -203,6 +207,7 @@ void NetworkManager::AsyncSend(std::shared_ptr<Session> session) {
 void NetworkManager::StartSession(std::shared_ptr<Session> session) {
   LOG_INFO(_logger, "Session {} started", session->Id);
   session->IsActive = true;
+  session->HeartbeatMissCount = 0;
   StartHeartbeatTimer(session);
   AcceptSessionMessage(session);
   if (session->IsClient) {
@@ -228,22 +233,24 @@ void NetworkManager::StartHeartbeatTimer(std::shared_ptr<Session> session) {
       SendNetworkMessage(session, msg);
     }
 
-    if (!session->IsActive || ec) {
-      if (ec == boost::asio::error::operation_aborted) {
-        return;
-      }
+    if (ec == boost::asio::error::operation_aborted) {
+      return;
+    }
 
-      if (ec) {
-        LOG_WARNING(_logger,
-                    "Heartbeat timer for session {} failed: [{}] Error {}",
-                    session->Id, ec.value(), ec.message());
-      } else {
-        LOG_WARNING(_logger, "Session {} failed heartbeat check", session->Id);
-      }
+    if (ec) {
+      LOG_WARNING(_logger,
+                  "Heartbeat timer for session {} failed: [{}] Error {}",
+                  session->Id, ec.value(), ec.message());
       RemoveSession(session);
       return;
     }
-    session->IsActive = false;
+
+    session->HeartbeatMissCount++;
+    if (session->HeartbeatMissCount >= 2) {
+      LOG_WARNING(_logger, "Session {} failed heartbeat check", session->Id);
+      RemoveSession(session);
+      return;
+    }
     StartHeartbeatTimer(std::move(session));
   });
 }
@@ -255,7 +262,7 @@ void NetworkManager::AckHeartbeat(uint32_t sessionId) {
     return;
   }
 
-  session->IsActive = true;
+  session->HeartbeatMissCount = 0;
   if (session->IsClient) {
     return;
   }
@@ -298,8 +305,12 @@ void NetworkManager::AcceptSessionMessage(std::shared_ptr<Session> session) {
       session->Socket,
       boost::asio::buffer(session->RawByteBuffer, MESSAGE_HEADER_SIZE),
       [this, session](std::error_code ec, std::size_t bytesRecv) {
-        if ((ec.value() == boost::asio::error::eof && !session->IsActive) ||
-            ec.value() == boost::asio::error::operation_aborted) {
+        if (ec.value() == boost::asio::error::operation_aborted) {
+          return;
+        }
+        if (ec.value() == boost::asio::error::eof) {
+          LOG_INFO(_logger, "Session {} disconnected", session->Id);
+          RemoveSession(session);
           return;
         }
         if (ec || bytesRecv < MESSAGE_HEADER_SIZE) {
@@ -308,10 +319,6 @@ void NetworkManager::AcceptSessionMessage(std::shared_ptr<Session> session) {
               "Failed to read message header from session {}: [{}] Error {}",
               session->Id, ec.value(), ec.message());
           RemoveSession(session);
-          return;
-        }
-
-        if (session->IsActive == false) {
           return;
         }
 
@@ -370,7 +377,9 @@ void NetworkManager::Connect(const Endpoint &endpoint) {
   }
   LOG_INFO(_logger, "Connected to server at {}:{}", endpoint.Host,
            endpoint.Port);
-  StartSession(std::move(session));
+  boost::asio::post(_ioContext, [this, session = std::move(session)]() mutable {
+    StartSession(std::move(session));
+  });
 }
 
 void NetworkManager::Disconnect(uint32_t sessionId) {
