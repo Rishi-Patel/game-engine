@@ -32,6 +32,7 @@ class AudioManager;
 class NetworkManager;
 class ScriptingBackend;
 class LuaScriptingBackend;
+class PythonScriptingBackend;
 
 class ContactListener : public b2ContactListener {
  public:
@@ -93,7 +94,8 @@ class SceneManager {
  public:
   SceneManager(Graphics::GraphicsManager* graphicsManager,
                AudioManager* audioManager, Input::InputManager* inputManager,
-               NetworkManager* networkManager);
+               NetworkManager* networkManager,
+               std::unique_ptr<ScriptingBackend> backend);
   ~SceneManager();
 
   void UpdateSceneActors();
@@ -106,6 +108,7 @@ class SceneManager {
 
  private:
   friend class LuaScriptingBackend;
+  friend class PythonScriptingBackend;
 
   Graphics::GraphicsManager* _graphicsManager;
   AudioManager* _audioManager;

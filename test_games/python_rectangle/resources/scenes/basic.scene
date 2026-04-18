@@ -1,0 +1,12 @@
+{
+  "actors": [
+    {
+      "name": "RectangleDrawer",
+      "components": {
+        "1": {
+          "type": "RectangleRenderer"
+        }
+      }
+    }
+  ]
+}

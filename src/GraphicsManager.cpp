@@ -35,7 +35,7 @@ struct TextDrawRequest {
 
 void Delay() {
   Uint32 current_frame_end_timestamp =
-      SDL_GetTicks();  // Record end time of the frame
+      SDL_GetTicks(); // Record end time of the frame
   Uint32 current_frame_duration_milliseconds =
       current_frame_end_timestamp - current_frame_start_timestamp;
   Uint32 desired_frame_duration_milliseconds = 16;
@@ -79,7 +79,7 @@ static const std::filesystem::path SHADER_CONFIG_DIR =
     std::filesystem::path("resources") / std::filesystem::path("shaders");
 
 class GraphicsManager::GraphicsManagerImpl {
- public:
+public:
   GraphicsManagerImpl(const std::string &windowName, int screenWidth,
                       int screenHeight, const RGBA &color);
   ~GraphicsManagerImpl();
@@ -100,21 +100,22 @@ class GraphicsManager::GraphicsManagerImpl {
   std::pair<float, float> GetSpriteDimension(const std::string &imageName);
   std::pair<int, int> GetScreenDimension();
 
- private:
+private:
   struct SDL_GLContext_ {
     SDL_GLContext Context;
     SDL_GLContext_(SDL_GLContext context) : Context(SDL_GLContext(nullptr)) {}
     SDL_GLContext_() : Context(SDL_GLContext()) {}
     ~SDL_GLContext_() {
-      if (Context != nullptr) SDL_GL_DeleteContext(Context);
+      if (Context != nullptr)
+        SDL_GL_DeleteContext(Context);
     }
   };
 
   struct Character {
-    Texture2D Texture;     // ID handle of the glyph texture
-    glm::ivec2 Size;       // Size of glyph
-    glm::ivec2 Bearing;    // Offset from baseline to left/top of glyph
-    unsigned int Advance;  // Offset to advance to next glyph
+    Texture2D Texture;    // ID handle of the glyph texture
+    glm::ivec2 Size;      // Size of glyph
+    glm::ivec2 Bearing;   // Offset from baseline to left/top of glyph
+    unsigned int Advance; // Offset to advance to next glyph
   };
 
   struct Font {
@@ -152,10 +153,8 @@ GraphicsManager::GraphicsManagerImpl::GraphicsManagerImpl(
     //   'Technically' SDL Create Window initializes video if it wasnt done, but
     //   this shouldnt be relied upon as the
     //    SDL documents say to call SDL_Init before any SDL functions
-    : _window(nullptr, &SDL_DestroyWindow),
-      _screenWidth(screenWidth),
-      _screenHeight(screenHeight),
-      _color(color),
+    : _window(nullptr, &SDL_DestroyWindow), _screenWidth(screenWidth),
+      _screenHeight(screenHeight), _color(color),
       _projectionMatrix(
           glm::ortho<float>(0.f, screenWidth, screenHeight, 0.f, -1.f, 1.f)),
       _renderScale(1.0f) {
@@ -417,7 +416,7 @@ void GraphicsManager::GraphicsManagerImpl::HandleRequests() {
                                   color);
 
       request.Position.first +=
-          (ch.Advance >> 6);  // bitshift by 6 to get value in pixels (2^6 = 64)
+          (ch.Advance >> 6); // bitshift by 6 to get value in pixels (2^6 = 64)
     }
   }
 
@@ -510,8 +509,8 @@ void GraphicsManager::RenderText(const std::string &font, unsigned int fontSize,
   _graphicsManagerImpl->RenderText(font, fontSize, text, x, y, color);
 }
 
-std::pair<float, float> GraphicsManager::GetSpriteDimension(
-    const std::string &imageName) {
+std::pair<float, float>
+GraphicsManager::GetSpriteDimension(const std::string &imageName) {
   return _graphicsManagerImpl->GetSpriteDimension(imageName);
 }
 

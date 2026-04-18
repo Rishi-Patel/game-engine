@@ -12,15 +12,34 @@
 #include "AudioManager.h"
 #include "GraphicsManager.h"
 #include "InputManager.h"
+#include "LuaScriptingBackend.h"
 #include "NetworkManager.h"
+#include "PythonScriptingBackend.h"
 #include "quill/Backend.h"
 #include "ResourceManager.h"
 #include "SceneManager.h"
+#include "ScriptingBackend.h"
 
 constexpr auto BACKGROUND_SFX_CHANNEL = 0;
 constexpr auto SCORE_SFX_CHANNEL = 1;
 
 SceneManager* scene;
+
+static std::unique_ptr<ScriptingBackend> CreateBackendFromArgs(int argc,
+                                                               char* argv[]) {
+  std::string_view lang = "lua";
+  for (int i = 1; i < argc; ++i) {
+    std::string_view arg = argv[i];
+    constexpr std::string_view kPrefix = "--scripting=";
+    if (arg.substr(0, kPrefix.size()) == kPrefix) {
+      lang = arg.substr(kPrefix.size());
+    }
+  }
+  if (lang == "python" || lang == "py") {
+    return std::make_unique<PythonScriptingBackend>();
+  }
+  return std::make_unique<LuaScriptingBackend>();
+}
 
 int main(int argc, char* argv[]) {
   bool running = true;
@@ -76,7 +95,7 @@ int main(int argc, char* argv[]) {
   try {
     sceneManager = std::make_unique<SceneManager>(
         graphicsManager.get(), audioManager.get(), &inputManager,
-        networkManager.get());
+        networkManager.get(), CreateBackendFromArgs(argc, argv));
   } catch (std::runtime_error& err) {
     std::cout << err.what();
     return 0;

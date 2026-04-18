@@ -11,7 +11,6 @@
 #include "GraphicsManager.h"
 #include "Helper.h"
 #include "InputManager.h"
-#include "LuaScriptingBackend.h"
 #include "NetworkManager.h"
 #include "ScriptingBackend.h"
 
@@ -375,11 +374,13 @@ void SceneManager::LoadTemplateFromConfig(
 SceneManager::SceneManager(Graphics::GraphicsManager* graphicsManager,
                            AudioManager* audioManager,
                            Input::InputManager* inputManager,
-                           NetworkManager* networkManager)
+                           NetworkManager* networkManager,
+                           std::unique_ptr<ScriptingBackend> backend)
     : _graphicsManager(graphicsManager),
       _audioManager(audioManager),
       _inputManager(inputManager),
       _networkManager(networkManager),
+      _backend(std::move(backend)),
       _actorCounter(0),
       _componentCounter(0),
       _cameraPos(0.0f, 0.0f),
@@ -387,16 +388,12 @@ SceneManager::SceneManager(Graphics::GraphicsManager* graphicsManager,
       _nextScene("basic"),
       _currentScene(""),
       _frameNumber(0) {
-  _backend = std::make_unique<LuaScriptingBackend>();
   _contactListener.SetBackend(_backend.get());
   static_raycast_listener = &_raycastListener;
   static_graphics_manager = _graphicsManager;
   static_camera_pos = &_cameraPos;
   static_camera_zoom = &_cameraZoom;
 
-  // Physics world is created lazily in InitializePhysics, but the backend
-  // still needs to be initialized up front so Lua API registration happens
-  // before any scene loading.
   _backend->Initialize(this, _graphicsManager, _audioManager, _inputManager,
                        _networkManager, _physicsWorld.get());
 }
