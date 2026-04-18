@@ -2,7 +2,7 @@
 
 #include <filesystem>
 #include <map>
-#include <mutex>
+#include <memory>
 #include <optional>
 #include <queue>
 #include <set>
@@ -16,12 +16,9 @@
 #include "rapidjson/document.h"
 #include "rapidjson/filereadstream.h"
 
-// clang-format off
-#include "lua.hpp"
-#include "LuaBridge/LuaBridge.h"
-// clang-format on
-
 #include "box2d/box2d.h"
+
+#include "ScriptRef.h"
 
 namespace Graphics {
 class GraphicsManager;
@@ -32,24 +29,30 @@ class InputManager;
 }
 
 class AudioManager;
-
-enum class GameMode;
-class AudioManager;
 class NetworkManager;
+class ScriptingBackend;
+class LuaScriptingBackend;
 
 class ContactListener : public b2ContactListener {
+ public:
+  explicit ContactListener(ScriptingBackend* backend = nullptr)
+      : _backend(backend) {}
+  void SetBackend(ScriptingBackend* backend) { _backend = backend; }
+
+ private:
   void BeginContact(b2Contact* contact) final;
   void EndContact(b2Contact* contact) final;
+  ScriptingBackend* _backend;
 };
 
 struct Actor {
   size_t id = 0;
   std::string name = "";
   bool dontDestroy = false;
-  std::map<std::string, luabridge::LuaRef> components;
+  std::map<std::string, ScriptRef> components;
   std::unordered_map<std::string, std::set<std::string>>
       _componentKeysByTemplateType;
-  std::map<std::string, std::map<std::string, luabridge::LuaRef>::iterator>
+  std::map<std::string, std::map<std::string, ScriptRef>::iterator>
       onUpdateComponents;
   std::set<std::string> onLateUpdateComponents;
   std::set<std::string> onStartComponents;
@@ -91,28 +94,32 @@ class SceneManager {
   SceneManager(Graphics::GraphicsManager* graphicsManager,
                AudioManager* audioManager, Input::InputManager* inputManager,
                NetworkManager* networkManager);
+  ~SceneManager();
 
   void UpdateSceneActors();
   void SetScene(const std::string& sceneName);
 
-  luabridge::LuaRef CreateActor(const std::string& actorTemplate);
-  luabridge::LuaRef GetComponent(Actor* actor, const std::string& templateType);
+  ScriptRef CreateActor(const std::string& actorTemplate);
+  ScriptRef GetComponent(Actor* actor, const std::string& templateType);
+
+  std::pair<float, float> ConvertCordsToScreen(float x, float y);
 
  private:
+  friend class LuaScriptingBackend;
+
   Graphics::GraphicsManager* _graphicsManager;
   AudioManager* _audioManager;
   Input::InputManager* _inputManager;
   NetworkManager* _networkManager;
 
+  std::unique_ptr<ScriptingBackend> _backend;
+
   std::unordered_map<int, Actor> actors;
 
-  std::unordered_map<std::string, luabridge::LuaRef> _componentTemplates;
   std::unordered_map<std::string, Actor> templateActors;
   std::unordered_map<std::string, std::set<int>> _actorsByName;
-  std::queue<std::pair<int, luabridge::LuaRef>> newComponents;
-  std::queue<std::pair<int, luabridge::LuaRef>>
-      newComponentsBuffer;  // used this to process newComponents added the last
-                            // frame (swap with newComponents)
+  std::queue<std::pair<int, ScriptRef>> newComponents;
+  std::queue<std::pair<int, ScriptRef>> newComponentsBuffer;
   std::queue<std::pair<int, std::string>> removedComponents;
   std::map<int, Actor*> onUpdateActors;
   std::set<int> onLateUpdateActors;
@@ -124,14 +131,7 @@ class SceneManager {
   std::unique_ptr<b2World> _physicsWorld;
   ContactListener _contactListener;
   RaycastListener _raycastListener;
-
-  std::unordered_map<
-      std::string, std::vector<std::pair<luabridge::LuaRef, luabridge::LuaRef>>>
-      subscriptions;
-  std::queue<std::tuple<std::string, luabridge::LuaRef, luabridge::LuaRef>>
-      newSubscriptions;
-  std::queue<std::tuple<std::string, luabridge::LuaRef, luabridge::LuaRef>>
-      removeSubscriptions;
+  bool _physicsInitialized{false};
 
   std::pair<float, float> _cameraPos;
   float _cameraZoom;
@@ -140,12 +140,8 @@ class SceneManager {
   std::string _currentScene;
   unsigned int _frameNumber;
 
-  std::mutex _networkLock;
-  std::queue<std::vector<uint8_t>> _networkMessageQueue;
-
   bool IsOnScreen(Actor& actor, const glm::ivec4& screenCoords);
 
-  luabridge::LuaRef LoadComponentTemplate(const std::string& componentPath);
   void LoadActorFromConfig(Actor& actor, const rapidjson::Value& actorConfig);
   void LoadTemplateFromConfig(Actor& actor,
                               const rapidjson::Document& templateConfig);
@@ -153,7 +149,6 @@ class SceneManager {
   void LoadActorFromTemplate(Actor& actor, Actor& templateActor);
   void SetParameter(Actor& actor, const std::string& configName,
                     const rapidjson::Value& value);
-  std::pair<float, float> ConvertCordsToScreen(float x, float y);
 
   void RunOnUpdate();
   void HandleActorChanges();
@@ -162,34 +157,10 @@ class SceneManager {
   void RemoveComponents();
   void CleanupActorComponents(Actor& actor);
 
-  void InitializeAPI();
-  void InitializeClassAPI();
-  void InitializeDebugAPI();
-  void InitializeActorClassAPI();
-  void InitializeActorAPI();
-  void InitializeApplicationAPI();
-  void InitializeInputAPI();
-  void InitializeTextAPI();
-  void InitializeAudioAPI();
-  void InitializeDrawAPI();
-  void InitializeCameraAPI();
-  void InitializeSceneAPI();
-  void InitializePhysicsAPI();
-  void InitializeEventsAPI();
-  void InitializeNetworkAPI();
+  void AttachComponentToActor(Actor& actor, ScriptRef& component);
+  void DetachComponentFromActor(Actor& actor, const std::string& componentName);
 
   void InitializePhysics();
-
-  lua_State* _luaState;
-  luabridge::LuaRef RunFile(const std::filesystem::path& filename);
-  void EstablishInheritance(luabridge::LuaRef& instance,
-                            const luabridge::LuaRef& template_component);
-  void Log(const std::string& message);
-  void AttachComponentToActor(Actor& actor, luabridge::LuaRef& component);
-  void DetachComponentFromActor(Actor& actor, const std::string& componentName);
-  luabridge::LuaRef CreateComponentInstance(
-      const std::string& componentInstanceName,
-      const luabridge::LuaRef& templateComponent);
 };
 
 extern SceneManager* scene;
